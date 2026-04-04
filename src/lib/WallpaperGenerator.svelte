@@ -16,6 +16,7 @@
 
 	let canvas: HTMLCanvasElement = $state() as HTMLCanvasElement;
 	let isGenerating = $state(false);
+	let shuffleSeed = $state(0);
 
 	// Persistent caches — survive across renders
 	const svgTextCache = new Map<string, string>();
@@ -140,14 +141,29 @@
 
 		const { layout, iconSize, spacing } = config;
 
+		// Shuffle icons if seed is non-zero
+		const shuffled = shuffleSeed > 0 ? [...selectedIcons] : selectedIcons;
+		if (shuffleSeed > 0) {
+			// Fisher-Yates seeded shuffle
+			let seed = shuffleSeed;
+			const rand = () => {
+				seed = (seed * 16807 + 0) % 2147483647;
+				return (seed - 1) / 2147483646;
+			};
+			for (let i = shuffled.length - 1; i > 0; i--) {
+				const j = Math.floor(rand() * (i + 1));
+				[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+			}
+		}
+
 		// 1. Compute positions
-		const positions = computePositions(layout, selectedIcons.length, iconSize, spacing);
+		const positions = computePositions(layout, shuffled.length, iconSize, spacing);
 
 		// 2. Assign colors to maximize same-color distances
 		const colors = assignColors(positions, theme.accentColors);
 
 		// 3. Load images with assigned colors
-		const iconImages = await loadAllImages(selectedIcons, colors);
+		const iconImages = await loadAllImages(shuffled, colors);
 
 		// 4. Draw
 		iconImages.forEach((img, i) => {
@@ -321,6 +337,7 @@
 		void config.spacing;
 		void config.opacity;
 		void theme.id;
+		void shuffleSeed;
 
 		const curKey = selectedIcons.map(i => i.slug).join(',');
 		const needsFullReload = curKey !== prevIconsKey || theme.id !== prevThemeId;
@@ -334,6 +351,10 @@
 
 		generateWallpaper();
 	});
+
+	function shuffleIcons() {
+		shuffleSeed++;
+	}
 </script>
 
 <div class="space-y-4">
@@ -353,6 +374,16 @@
 			<option value="1080x1920">1080 × 1920 (Portrait)</option>
 			<option value="1080x1080">1080 × 1080 (Square)</option>
 		</select>
+		<button
+			class="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+			disabled={selectedIcons.length === 0}
+			onclick={shuffleIcons}
+			title="Shuffle icon positions"
+		>
+			<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+			</svg>
+		</button>
 		<button
 			class="rounded-lg bg-violet-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
 			disabled={selectedIcons.length === 0 || isGenerating}
