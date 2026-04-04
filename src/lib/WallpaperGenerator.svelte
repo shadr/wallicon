@@ -17,54 +17,51 @@
 	let canvas: HTMLCanvasElement = $state() as HTMLCanvasElement;
 	let isGenerating = $state(false);
 
-	// SVG cache so we only fetch once
-	const svgCache = new Map<string, string>();
+	// Persistent caches — survive across renders
+	const svgTextCache = new Map<string, string>();
+	const imageCache = new Map<string, HTMLImageElement>();
 
-	async function fetchSvgText(slug: string): Promise<string> {
-		const cached = svgCache.get(slug);
-		if (cached) return cached;
-		const res = await fetch(getIconSvgUrl(slug));
-		const text = await res.text();
-		svgCache.set(slug, text);
-		return text;
-	}
+	async function loadAllImages(): Promise<HTMLImageElement[]> {
+		const images: HTMLImageElement[] = [];
+		for (const icon of selectedIcons) {
+			const cached = imageCache.get(icon.slug);
+			if (cached) {
+				images.push(cached);
+				continue;
+			}
 
-	function recolorSvg(svgText: string, accentColor: string): string {
-		// Inject fill into the SVG root so paths without explicit fill inherit the accent color.
-		// Do NOT touch stroke — adding a stroke where none existed makes icons look bold.
-		return svgText
-			.replace(/<svg /, `<svg fill="${accentColor}" `)
-			.replace(/fill="([^"]*?)"/g, (m, v) => {
-				if (v === 'none' || v === 'transparent') return m;
-				return `fill="${accentColor}"`;
+			let svgText = svgTextCache.get(icon.slug);
+			if (!svgText) {
+				const res = await fetch(getIconSvgUrl(icon.slug));
+				svgText = await res.text();
+				svgTextCache.set(icon.slug, svgText);
+			}
+
+			const accentColor = theme.accentColors.length > 0
+				? theme.accentColors[Math.floor(Math.random() * theme.accentColors.length)]
+				: '#ffffff';
+
+			const recolored = svgText
+				.replace(/<svg /, `<svg fill="${accentColor}" `)
+				.replace(/fill="([^"]*?)"/g, (m, v) => {
+					if (v === 'none' || v === 'transparent') return m;
+					return `fill="${accentColor}"`;
+				});
+
+			const blob = new Blob([recolored], { type: 'image/svg+xml;charset=utf-8' });
+			const url = URL.createObjectURL(blob);
+
+			const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+				const i = new Image();
+				i.onload = () => { URL.revokeObjectURL(url); resolve(i); };
+				i.onerror = () => { URL.revokeObjectURL(url); reject(new Error(icon.title)); };
+				i.src = url;
 			});
-	}
 
-	function getRandomAccentColor(): string {
-		if (!theme.accentColors || theme.accentColors.length === 0) return '#ffffff';
-		return theme.accentColors[Math.floor(Math.random() * theme.accentColors.length)];
-	}
-
-	async function loadIconImage(icon: Icon): Promise<HTMLImageElement> {
-		const svgText = await fetchSvgText(icon.slug);
-		const accentColor = getRandomAccentColor();
-		const recolored = recolorSvg(svgText, accentColor);
-		
-		const blob = new Blob([recolored], { type: 'image/svg+xml;charset=utf-8' });
-		const url = URL.createObjectURL(blob);
-		
-		return new Promise((resolve, reject) => {
-			const img = new Image();
-			img.onload = () => {
-				URL.revokeObjectURL(url);
-				resolve(img);
-			};
-			img.onerror = () => {
-				URL.revokeObjectURL(url);
-				reject(new Error(`Failed to load icon: ${icon.title}`));
-			};
-			img.src = url;
-		});
+			imageCache.set(icon.slug, img);
+			images.push(img);
+		}
+		return images;
 	}
 
 	function drawIcon(
@@ -87,25 +84,11 @@
 		const ctx = canvas.getContext('2d');
 		if (!ctx) return;
 
-		// Clear canvas
 		ctx.clearRect(0, 0, width, height);
-
-		// Draw background
 		ctx.fillStyle = theme.background;
 		ctx.fillRect(0, 0, width, height);
 
-		// Preload all icon images
-		const iconImages: HTMLImageElement[] = [];
-		for (const icon of selectedIcons) {
-			try {
-				const img = await loadIconImage(icon);
-				iconImages.push(img);
-			} catch {
-				// Skip icons that fail to load
-			}
-		}
-
-		// Layout icons
+		const iconImages = await loadAllImages();
 		const { layout, iconSize, spacing } = config;
 
 		if (layout === 'grid') {
@@ -119,6 +102,26 @@
 		}
 
 		isGenerating = false;
+	}
+
+	function redrawCanvas() {
+		if (!canvas || selectedIcons.length === 0) return;
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return;
+
+		const images = selectedIcons.map(i => imageCache.get(i.slug)).filter(Boolean) as HTMLImageElement[];
+		if (images.length === 0) return;
+
+		ctx.clearRect(0, 0, width, height);
+		ctx.fillStyle = theme.background;
+		ctx.fillRect(0, 0, width, height);
+
+		const { layout, iconSize, spacing } = config;
+
+		if (layout === 'grid') drawGridLayout(ctx, images, iconSize, spacing);
+		else if (layout === 'square-spiral') drawSquareSpiralLayout(ctx, images, iconSize, spacing);
+		else if (layout === 'hex-spiral') drawHexSpiralLayout(ctx, images, iconSize, spacing);
+		else if (layout === 'arc') drawArcLayout(ctx, images, iconSize);
 	}
 
 	function drawGridLayout(
@@ -150,8 +153,6 @@
 		const centerX = width / 2;
 		const centerY = height / 2;
 		const step = iconSize + spacing;
-		// Generate square spiral: E, S, W, W, N, N, E, E, E, S, S, S, ...
-		// Direction cycle: right, down, left, up
 		const dirs = [
 			{ dx: 1, dy: 0 },
 			{ dx: 0, dy: 1 },
@@ -169,15 +170,11 @@
 			y += d.dy;
 			points.push({ x, y });
 			stepsInSeg++;
-
 			if (stepsInSeg === segLength) {
 				stepsInSeg = 0;
 				dirIdx++;
 				segsAtLen++;
-				if (segsAtLen === 2) {
-					segsAtLen = 0;
-					segLength++;
-				}
+				if (segsAtLen === 2) { segsAtLen = 0; segLength++; }
 			}
 		}
 
@@ -197,29 +194,21 @@
 		const centerX = width / 2;
 		const centerY = height / 2;
 		const step = iconSize + spacing;
-		const rowH = step * 0.866025; // sqrt(3)/2
+		const rowH = step * 0.866025;
 
-		// Generate hex ring coordinates: ring 0 = center, ring n = 6*n cells
 		const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
-
 		let ring = 1;
-		while (points.length < iconImages.length) {
-			// 6 directions for hex ring, each direction walked (ring) times
-			const dirs = [
-				{ dx: 1, dy: 0 },    // E
-				{ dx: 0, dy: 1 },    // SE
-				{ dx: -1, dy: 1 },   // SW
-				{ dx: -1, dy: 0 },   // W
-				{ dx: 0, dy: -1 },   // NW
-				{ dx: 1, dy: -1 }    // NE
-			];
+		const dirs = [
+			{ dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 1 },
+			{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 }
+		];
 
-			let hx = 0, hy = -ring; // Start at top of ring
+		while (points.length < iconImages.length) {
+			let hx = 0, hy = -ring;
 			for (let d = 0; d < 6; d++) {
 				const dir = dirs[d];
 				for (let s = 0; s < ring && points.length < iconImages.length; s++) {
-					hx += dir.dx;
-					hy += dir.dy;
+					hx += dir.dx; hy += dir.dy;
 					points.push({ x: hx, y: hy });
 				}
 			}
@@ -227,7 +216,6 @@
 		}
 
 		iconImages.forEach((img, i) => {
-			// Convert axial hex coords to screen: offset X by y/2 for proper hex layout
 			const px = centerX + (points[i].x + points[i].y * 0.5) * step - iconSize / 2;
 			const py = centerY + points[i].y * rowH - iconSize / 2;
 			drawIcon(ctx, img, px, py, iconSize);
@@ -259,15 +247,30 @@
 		link.click();
 	}
 
+	// Track previous values to detect what changed
+	let prevIconsKey = $state('');
+	let prevThemeId = $state('');
+
 	$effect(() => {
-		if (canvas && selectedIcons.length > 0) {
-			svgCache.clear();
-			void config.layout;
-			void config.iconSize;
-			void config.spacing;
-			void config.opacity;
-			void theme.id;
+		if (!canvas || selectedIcons.length === 0) return;
+
+		const curKey = selectedIcons.map(i => i.slug).join(',');
+		const needsReload = curKey !== prevIconsKey || theme.id !== prevThemeId;
+
+		// Explicit dependency reads so Svelte tracks them
+		void config.layout;
+		void config.iconSize;
+		void config.spacing;
+		void config.opacity;
+
+		if (needsReload) {
+			prevIconsKey = curKey;
+			prevThemeId = theme.id;
+			imageCache.clear();
+			svgTextCache.clear();
 			generateWallpaper();
+		} else {
+			redrawCanvas();
 		}
 	});
 </script>
