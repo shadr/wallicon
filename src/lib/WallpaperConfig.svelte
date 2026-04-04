@@ -12,6 +12,7 @@
 		{ value: 'grid', label: 'Grid', icon: '⊞' },
 		{ value: 'square-spiral', label: 'Sq Spiral', icon: '⊡' },
 		{ value: 'hex-spiral', label: 'Hex Spiral', icon: '⬡' },
+		{ value: 'hex-symmetric', label: 'Hex Symmetric', icon: '❋' },
 		{ value: 'arc', label: 'Arc', icon: '◐' }
 	];
 </script>
@@ -22,7 +23,7 @@
 		<span id="layout-label" class="mb-2 block text-xs font-medium text-gray-400">
 			Layout
 		</span>
-		<div class="grid grid-cols-4 gap-2" role="radiogroup" aria-labelledby="layout-label">
+		<div class="grid grid-cols-5 gap-2" role="radiogroup" aria-labelledby="layout-label">
 			{#each layouts as layout}
 				<button
 					role="radio"

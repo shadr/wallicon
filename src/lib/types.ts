@@ -13,7 +13,7 @@ export interface Theme {
 	accentColors: string[];
 }
 
-export type LayoutMode = 'grid' | 'square-spiral' | 'hex-spiral' | 'arc';
+export type LayoutMode = 'grid' | 'square-spiral' | 'hex-spiral' | 'hex-symmetric' | 'arc';
 
 export interface WallpaperConfig {
 	layout: LayoutMode;

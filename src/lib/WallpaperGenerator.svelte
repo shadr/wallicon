@@ -97,6 +97,8 @@
 			drawSquareSpiralLayout(ctx, iconImages, iconSize, spacing);
 		} else if (layout === 'hex-spiral') {
 			drawHexSpiralLayout(ctx, iconImages, iconSize, spacing);
+		} else if (layout === 'hex-symmetric') {
+			drawHexSymmetricLayout(ctx, iconImages, iconSize, spacing);
 		} else if (layout === 'arc') {
 			drawArcLayout(ctx, iconImages, iconSize);
 		}
@@ -121,6 +123,7 @@
 		if (layout === 'grid') drawGridLayout(ctx, images, iconSize, spacing);
 		else if (layout === 'square-spiral') drawSquareSpiralLayout(ctx, images, iconSize, spacing);
 		else if (layout === 'hex-spiral') drawHexSpiralLayout(ctx, images, iconSize, spacing);
+		else if (layout === 'hex-symmetric') drawHexSymmetricLayout(ctx, images, iconSize, spacing);
 		else if (layout === 'arc') drawArcLayout(ctx, images, iconSize);
 	}
 
@@ -212,6 +215,75 @@
 					points.push({ x: hx, y: hy });
 				}
 			}
+			ring++;
+		}
+
+		iconImages.forEach((img, i) => {
+			const px = centerX + (points[i].x + points[i].y * 0.5) * step - iconSize / 2;
+			const py = centerY + points[i].y * rowH - iconSize / 2;
+			drawIcon(ctx, img, px, py, iconSize);
+		});
+	}
+
+	function drawHexSymmetricLayout(
+		ctx: CanvasRenderingContext2D,
+		iconImages: HTMLImageElement[],
+		iconSize: number,
+		spacing: number
+	) {
+		const centerX = width / 2;
+		const centerY = height / 2;
+		const step = iconSize + spacing;
+		const rowH = step * 0.866025;
+
+		// Build symmetrically-ordered hex ring points
+		const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
+		const dirs = [
+			{ dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 1 },
+			{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 }
+		];
+
+		let ring = 1;
+		while (points.length < iconImages.length) {
+			const ringPoints: Array<{ x: number; y: number }> = [];
+			let hx = 0, hy = -ring;
+			for (let d = 0; d < 6; d++) {
+				const dir = dirs[d];
+				for (let s = 0; s < ring; s++) {
+					hx += dir.dx;
+					hy += dir.dy;
+					ringPoints.push({ x: hx, y: hy });
+				}
+			}
+
+			// Create opposite pairs and sort by extremeness
+			const screenY = (p: { x: number; y: number }) => p.y * 0.866025;
+			const used = new Set<string>();
+			const pairs: Array<{ top: { x: number; y: number }; bottom: { x: number; y: number }; score: number }> = [];
+
+			for (const p of ringPoints) {
+				const key = `${p.x},${p.y}`;
+				if (used.has(key)) continue;
+				const opp = ringPoints.find(q => q.x === -p.x && q.y === -p.y);
+				if (!opp) continue;
+				const oppKey = `${opp.x},${opp.y}`;
+				used.add(key);
+				used.add(oppKey);
+
+				const score = Math.max(Math.abs(screenY(p)), Math.abs(screenY(opp)));
+				const top = screenY(p) < screenY(opp) ? p : opp;
+				const bottom = screenY(p) < screenY(opp) ? opp : p;
+				pairs.push({ top, bottom, score });
+			}
+
+			// Ring 1: axis-first (ascending extremeness), Ring 2+: extreme-first (descending)
+			pairs.sort((a, b) => ring === 1 ? a.score - b.score : b.score - a.score);
+
+			// Interleave each pair: top then bottom
+			for (const { top, bottom } of pairs) {
+				points.push(top, bottom);
+			}
+
 			ring++;
 		}
 
