@@ -1,33 +1,29 @@
 <script lang="ts">
 	import type { Icon } from '$lib/types';
 	import type { Theme } from '$lib/types';
+	import type { WallpaperConfig } from '$lib/types';
+	import { getIconSvgUrl } from '$lib/icons';
 
 	interface Props {
 		selectedIcons: Icon[];
 		theme: Theme;
+		config: WallpaperConfig;
 		width?: number;
 		height?: number;
 	}
 
-	let { selectedIcons, theme, width = 1920, height = 1080 }: Props = $props();
+	let { selectedIcons, theme, config, width = 1920, height = 1080 }: Props = $props();
 
 	let canvas: HTMLCanvasElement = $state() as HTMLCanvasElement;
 	let isGenerating = $state(false);
 
 	async function loadIconImage(icon: Icon): Promise<HTMLImageElement> {
 		return new Promise((resolve, reject) => {
-			const svgBlob = new Blob([icon.svg], { type: 'image/svg+xml' });
-			const url = URL.createObjectURL(svgBlob);
 			const img = new Image();
-			img.onload = () => {
-				URL.revokeObjectURL(url);
-				resolve(img);
-			};
-			img.onerror = () => {
-				URL.revokeObjectURL(url);
-				reject(new Error(`Failed to load icon: ${icon.name}`));
-			};
-			img.src = url;
+			img.onload = () => resolve(img);
+			img.onerror = () => reject(new Error(`Failed to load icon: ${icon.title}`));
+			img.crossOrigin = 'anonymous';
+			img.src = getIconSvgUrl(icon.slug);
 		});
 	}
 
@@ -36,29 +32,28 @@
 		img: HTMLImageElement,
 		x: number,
 		y: number,
-		size: number,
-		icon: Icon
+		size: number
 	) {
 		ctx.save();
 
 		// Apply icon style clipping
-		if (theme.iconStyle === 'circle') {
+		if (config.iconStyle === 'circle') {
 			ctx.beginPath();
 			ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
 			ctx.clip();
-		} else if (theme.iconStyle === 'rounded') {
+		} else if (config.iconStyle === 'rounded') {
 			const radius = size * 0.2;
 			ctx.beginPath();
 			ctx.roundRect(x, y, size, size, radius);
 			ctx.clip();
-		} else if (theme.iconStyle === 'square') {
+		} else if (config.iconStyle === 'square') {
 			ctx.beginPath();
 			ctx.rect(x, y, size, size);
 			ctx.clip();
 		}
 
 		// Apply opacity and draw
-		ctx.globalAlpha = theme.opacity ?? 1;
+		ctx.globalAlpha = config.opacity;
 		ctx.drawImage(img, x, y, size, size);
 		ctx.restore();
 	}
@@ -97,9 +92,7 @@
 		}
 
 		// Layout icons
-		const layout = theme.layout;
-		const iconSize = theme.gridSize ?? 100;
-		const spacing = theme.spacing ?? 20;
+		const { layout, iconSize, spacing } = config;
 
 		if (layout === 'grid') {
 			drawGridLayout(ctx, iconImages, iconSize, spacing);
@@ -130,7 +123,7 @@
 			const row = Math.floor(i / cols);
 			const x = startX + col * (iconSize + spacing);
 			const y = startY + row * (iconSize + spacing);
-			drawIcon(ctx, img, x, y, iconSize, selectedIcons[i]);
+			drawIcon(ctx, img, x, y, iconSize);
 		});
 	}
 
@@ -174,13 +167,13 @@
 				positions.push({ x: x!, y: y! });
 
 				ctx.save();
-				if (theme.rotation) {
+				if (config.rotation) {
 					const angle = ((rng() - 0.5) * Math.PI) / 4;
 					ctx.translate(x! + iconSize / 2, y! + iconSize / 2);
 					ctx.rotate(angle);
 					ctx.translate(-(x! + iconSize / 2), -(y! + iconSize / 2));
 				}
-				drawIcon(ctx, img, x!, y!, iconSize, selectedIcons[i]);
+				drawIcon(ctx, img, x!, y!, iconSize);
 				ctx.restore();
 			}
 		});
@@ -200,7 +193,7 @@
 			const angle = i * angleStep - Math.PI / 2;
 			const x = centerX + Math.cos(angle) * radius - iconSize / 2;
 			const y = centerY + Math.sin(angle) * radius - iconSize / 2;
-			drawIcon(ctx, img, x, y, iconSize, selectedIcons[i]);
+			drawIcon(ctx, img, x, y, iconSize);
 		});
 	}
 
@@ -219,7 +212,7 @@
 			const radius = t * maxRadius;
 			const x = centerX + Math.cos(angle) * radius - iconSize / 2;
 			const y = centerY + Math.sin(angle) * radius - iconSize / 2;
-			drawIcon(ctx, img, x, y, iconSize, selectedIcons[i]);
+			drawIcon(ctx, img, x, y, iconSize);
 		});
 	}
 
@@ -307,7 +300,7 @@
 
 	{#if selectedIcons.length > 0}
 		<p class="text-center text-sm text-gray-500">
-			{selectedIcons.length} icon{selectedIcons.length !== 1 ? 's' : ''} • {theme.name} • {width}×{height}
+			{selectedIcons.length} icon{selectedIcons.length !== 1 ? 's' : ''} • {theme.name} • {config.layout} • {width}×{height}
 		</p>
 	{/if}
 </div>
