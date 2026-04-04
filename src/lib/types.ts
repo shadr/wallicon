@@ -10,7 +10,7 @@ export interface Theme {
 	id: string;
 	name: string;
 	background: string;
-	gradient?: string[];
+	accentColors: string[];
 }
 
 export type LayoutMode = 'grid' | 'scatter' | 'arc' | 'spiral';

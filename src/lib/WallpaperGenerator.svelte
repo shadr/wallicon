@@ -17,13 +17,53 @@
 	let canvas: HTMLCanvasElement = $state() as HTMLCanvasElement;
 	let isGenerating = $state(false);
 
+	// SVG cache so we only fetch once
+	const svgCache = new Map<string, string>();
+
+	async function fetchSvgText(slug: string): Promise<string> {
+		const cached = svgCache.get(slug);
+		if (cached) return cached;
+		const res = await fetch(getIconSvgUrl(slug));
+		const text = await res.text();
+		svgCache.set(slug, text);
+		return text;
+	}
+
+	function recolorSvg(svgText: string, accentColor: string): string {
+		// Inject fill into the SVG root so paths without explicit fill inherit the accent color.
+		// Do NOT touch stroke — adding a stroke where none existed makes icons look bold.
+		return svgText
+			.replace(/<svg /, `<svg fill="${accentColor}" `)
+			.replace(/fill="([^"]*?)"/g, (m, v) => {
+				if (v === 'none' || v === 'transparent') return m;
+				return `fill="${accentColor}"`;
+			});
+	}
+
+	function getRandomAccentColor(): string {
+		if (!theme.accentColors || theme.accentColors.length === 0) return '#ffffff';
+		return theme.accentColors[Math.floor(Math.random() * theme.accentColors.length)];
+	}
+
 	async function loadIconImage(icon: Icon): Promise<HTMLImageElement> {
+		const svgText = await fetchSvgText(icon.slug);
+		const accentColor = getRandomAccentColor();
+		const recolored = recolorSvg(svgText, accentColor);
+		
+		const blob = new Blob([recolored], { type: 'image/svg+xml;charset=utf-8' });
+		const url = URL.createObjectURL(blob);
+		
 		return new Promise((resolve, reject) => {
 			const img = new Image();
-			img.onload = () => resolve(img);
-			img.onerror = () => reject(new Error(`Failed to load icon: ${icon.title}`));
-			img.crossOrigin = 'anonymous';
-			img.src = getIconSvgUrl(icon.slug);
+			img.onload = () => {
+				URL.revokeObjectURL(url);
+				resolve(img);
+			};
+			img.onerror = () => {
+				URL.revokeObjectURL(url);
+				reject(new Error(`Failed to load icon: ${icon.title}`));
+			};
+			img.src = url;
 		});
 	}
 
@@ -51,15 +91,7 @@
 		ctx.clearRect(0, 0, width, height);
 
 		// Draw background
-		if (theme.gradient && theme.gradient.length > 0) {
-			const gradient = ctx.createLinearGradient(0, 0, width, height);
-			theme.gradient.forEach((color, i) => {
-				gradient.addColorStop(i / (theme.gradient!.length - 1), color);
-			});
-			ctx.fillStyle = gradient;
-		} else {
-			ctx.fillStyle = theme.background;
-		}
+		ctx.fillStyle = theme.background;
 		ctx.fillRect(0, 0, width, height);
 
 		// Preload all icon images
@@ -197,10 +229,13 @@
 
 	$effect(() => {
 		if (canvas && selectedIcons.length > 0) {
+			// Clear SVG cache when theme changes so icons get recolored
+			svgCache.clear();
 			void config.layout;
 			void config.iconSize;
 			void config.spacing;
 			void config.opacity;
+			void theme.id;
 			generateWallpaper();
 		}
 	});
