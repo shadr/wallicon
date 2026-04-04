@@ -58,7 +58,9 @@
 	{#if selectedIcons.length > 0}
 		<div class="flex flex-wrap gap-1">
 			{#each selectedIcons as icon}
-				<span class="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-0.5 text-xs font-medium text-violet-400 ring-1 ring-violet-500/20">
+				<span
+					class="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-0.5 text-xs font-medium text-violet-400 ring-1 ring-violet-500/20"
+				>
 					{icon.title}
 					<button
 						class="ml-0.5 text-violet-300 hover:text-violet-200"
@@ -74,22 +76,42 @@
 	<div class="grid grid-cols-7 gap-2">
 		{#each displayedIcons as icon}
 			<button
-				class="group relative rounded-lg border border-white/10 bg-white/5 p-2.5 transition-all hover:border-white/20 hover:bg-white/10 {isSelected(icon.slug) ? 'border-violet-500/50 bg-violet-500/10' : ''}"
+				class="group relative rounded-lg border border-white/10 bg-white/5 p-2.5 transition-all hover:border-white/20 hover:bg-white/10 {isSelected(
+					icon.slug
+				)
+					? 'border-violet-500/50 bg-violet-500/10'
+					: ''}"
 				onclick={() => handleToggle(icon)}
 			>
-				<div class="aspect-square mb-1.5 flex items-center justify-center">
+				<div class="mb-1.5 flex aspect-square items-center justify-center">
 					<img
 						src={getIconSvgUrl(icon.slug)}
 						alt={icon.title}
-						class="h-full w-full object-contain"
+						class="h-full w-full object-contain opacity-90 grayscale invert"
 						loading="lazy"
 					/>
 				</div>
-				<p class="text-[10px] font-medium text-center truncate text-gray-400 group-hover:text-gray-300">{icon.title}</p>
+				<p
+					class="truncate text-center text-[10px] font-medium text-gray-400 group-hover:text-gray-300"
+				>
+					{icon.title}
+				</p>
 				{#if isSelected(icon.slug)}
-					<div class="absolute top-1 right-1 h-4 w-4 rounded-full bg-violet-500 flex items-center justify-center">
-						<svg class="h-2.5 w-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+					<div
+						class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500"
+					>
+						<svg
+							class="h-2.5 w-2.5 text-white"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="3"
+								d="M5 13l4 4L19 7"
+							/>
 						</svg>
 					</div>
 				{/if}
