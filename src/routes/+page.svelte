@@ -151,7 +151,7 @@
 					</svg>
 					<h2 class="text-sm font-medium">Theme</h2>
 				</div>
-				<div class="max-h-[40vh] overflow-y-auto p-3">
+				<div class="max-h-[40vh] overflow-y-auto p-4">
 					<ThemeSelector {selectedTheme} onSelect={selectTheme} />
 				</div>
 			</div>
