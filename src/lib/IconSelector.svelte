@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { allIcons, getIconPage, searchIcons, totalIcons, getIconSvgUrl } from '$lib/icons';
+	import { allIcons, totalIcons, getIconSvgUrl } from '$lib/icons';
 	import type { Icon } from '$lib/types';
 
-	const ICONS_PER_PAGE = 60;
+	const INITIAL_CHUNK = 60;
+	const LOAD_MORE_CHUNK = 120;
 
 	interface Props {
 		selectedIcons: Icon[];
@@ -12,20 +13,19 @@
 	let { selectedIcons, onToggle }: Props = $props();
 
 	let searchQuery = $state('');
-	let currentPage = $state(0);
-	let displayedIcons = $state<Omit<Icon, 'svg'>[]>([]);
-	let isSearching = $state(false);
-	const totalPages = Math.ceil(totalIcons / ICONS_PER_PAGE);
+	let visibleCount = $state(INITIAL_CHUNK);
+	let sentinel: HTMLDivElement;
+
+	const filteredIcons = $derived(
+		searchQuery.length > 0
+			? allIcons.filter((i) => i.title.toLowerCase().includes(searchQuery.toLowerCase()))
+			: allIcons
+	);
+
+	const visibleIcons = $derived(filteredIcons.slice(0, visibleCount));
 
 	$effect(() => {
-		if (searchQuery.length > 0) {
-			isSearching = true;
-			displayedIcons = searchIcons(searchQuery);
-			currentPage = 0;
-			isSearching = false;
-		} else {
-			displayedIcons = getIconPage(currentPage);
-		}
+		visibleCount = INITIAL_CHUNK;
 	});
 
 	function isSelected(slug: string): boolean {
@@ -36,24 +36,30 @@
 		onToggle(icon);
 	}
 
-	function loadMore() {
-		if (searchQuery.length > 0) return;
-		if (currentPage < totalPages - 1) {
-			currentPage++;
-			displayedIcons = [...displayedIcons, ...getIconPage(currentPage)];
-		}
-	}
+	$effect(() => {
+		if (!sentinel) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting && visibleCount < filteredIcons.length) {
+					visibleCount += LOAD_MORE_CHUNK;
+				}
+			},
+			{ rootMargin: '600px' }
+		);
+
+		observer.observe(sentinel);
+		return () => observer.disconnect();
+	});
 </script>
 
 <div class="space-y-4">
-	<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-		<input
-			type="text"
-			placeholder="Search {totalIcons} icons..."
-			bind:value={searchQuery}
-			class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-transparent focus:ring-2 focus:ring-violet-500/40 sm:flex-1"
-		/>
-	</div>
+	<input
+		type="text"
+		placeholder="Search {totalIcons} icons..."
+		bind:value={searchQuery}
+		class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-transparent focus:ring-2 focus:ring-violet-500/40"
+	/>
 
 	{#if selectedIcons.length > 0}
 		<div class="flex flex-wrap gap-1">
@@ -74,7 +80,7 @@
 	{/if}
 
 	<div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-3">
-		{#each displayedIcons as icon}
+		{#each visibleIcons as icon}
 			<button
 				class="group relative rounded-lg border border-white/10 bg-white/5 p-2.5 transition-all hover:border-white/20 hover:bg-white/10 {isSelected(
 					icon.slug
@@ -119,18 +125,10 @@
 		{/each}
 	</div>
 
-	{#if !isSearching && searchQuery.length === 0 && currentPage < totalPages - 1}
-		<div class="flex justify-center">
-			<button
-				class="rounded-lg bg-white/5 px-5 py-2 text-sm text-gray-400 ring-1 ring-white/10 transition-colors hover:bg-white/10 hover:text-gray-300"
-				onclick={loadMore}
-			>
-				Load more ({displayedIcons.length} of {totalIcons} shown)
-			</button>
-		</div>
-	{/if}
+	<!-- Sentinel for loading more -->
+	<div bind:this={sentinel} class="h-1"></div>
 
-	{#if displayedIcons.length === 0 && !isSearching}
+	{#if filteredIcons.length === 0}
 		<div class="py-12 text-center text-gray-500">
 			<p>No icons found</p>
 		</div>

@@ -87,7 +87,7 @@
 	<meta name="description" content="Generate beautiful wallpapers from your favorite software icons" />
 </svelte:head>
 
-<div class="flex min-h-screen flex-col bg-[#0e1117] text-gray-100">
+<div class="flex h-screen flex-col bg-[#0e1117] text-gray-100">
 	<!-- Header -->
 	<header class="sticky top-0 z-50 border-b border-white/5 bg-[#0e1117]/80 backdrop-blur-xl">
 		<div class="mx-auto flex h-14 max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -125,24 +125,24 @@
 	</div>
 
 	<!-- Main Content -->
-	<main class="mx-auto flex w-full max-w-[1600px] flex-1">
+	<main class="mx-auto flex w-full max-w-[1600px] flex-1 overflow-hidden">
 		<!-- Left: Icons Panel -->
-		<div class="w-full flex-1 border-r border-white/5 {activeSection !== 'icons' ? 'hidden lg:flex' : 'flex'}">
-			<div class="flex w-full flex-col">
+		<div class="w-full min-w-0 flex-1 border-r border-white/5 {activeSection !== 'icons' ? 'hidden lg:flex' : 'flex'}">
+			<div class="flex min-h-0 w-full flex-col">
 				<div class="flex items-center gap-2 border-b border-white/5 px-4 py-3">
 					<svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
 					</svg>
 					<h2 class="text-sm font-medium">Icons</h2>
 				</div>
-				<div class="flex-1 overflow-y-auto p-4">
+				<div class="min-h-0 flex-1 overflow-y-auto p-4">
 					<IconSelector {selectedIcons} onToggle={toggleIcon} />
 				</div>
 			</div>
 		</div>
 
 		<!-- Center: Theme + Config Panel -->
-		<div class="hidden lg:flex w-96 flex-shrink-0 flex-col border-r border-white/5">
+		<div class="hidden lg:flex w-96 min-w-0 flex-shrink-0 flex-col border-r border-white/5">
 			<!-- Theme -->
 			<div class="{activeSection === 'config' ? 'hidden' : ''}">
 				<div class="flex items-center gap-2 border-b border-white/5 px-4 py-3">
@@ -171,8 +171,8 @@
 		</div>
 
 		<!-- Right: Preview Panel -->
-		<div class="w-full flex-1 {activeSection !== 'icons' ? 'hidden lg:flex' : 'flex'} lg:max-w-[55%]">
-			<div class="flex w-full flex-col">
+		<div class="w-full min-w-0 flex-1 {activeSection !== 'icons' ? 'hidden lg:flex' : 'flex'} lg:max-w-[55%]">
+			<div class="flex min-h-0 w-full flex-col">
 				<div class="flex items-center gap-2 border-b border-white/5 px-4 py-3">
 					<svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
