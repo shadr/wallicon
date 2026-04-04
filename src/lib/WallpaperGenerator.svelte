@@ -35,24 +35,6 @@
 		size: number
 	) {
 		ctx.save();
-
-		// Apply icon style clipping
-		if (config.iconStyle === 'circle') {
-			ctx.beginPath();
-			ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-			ctx.clip();
-		} else if (config.iconStyle === 'rounded') {
-			const radius = size * 0.2;
-			ctx.beginPath();
-			ctx.roundRect(x, y, size, size, radius);
-			ctx.clip();
-		} else if (config.iconStyle === 'square') {
-			ctx.beginPath();
-			ctx.rect(x, y, size, size);
-			ctx.clip();
-		}
-
-		// Apply opacity and draw
 		ctx.globalAlpha = config.opacity;
 		ctx.drawImage(img, x, y, size, size);
 		ctx.restore();
@@ -137,7 +119,6 @@
 		const scatterRadius = Math.min(width, height) * 0.35;
 		const minDist = iconSize * 1.4;
 		const positions: Array<{ x: number; y: number }> = [];
-		const rng = seededRandom(Date.now());
 
 		iconImages.forEach((img, i) => {
 			let x: number, y: number;
@@ -145,8 +126,8 @@
 			let valid = false;
 
 			while (!valid && attempts < 300) {
-				const angle = rng() * Math.PI * 2;
-				const radius = rng() * scatterRadius;
+				const angle = Math.random() * Math.PI * 2;
+				const radius = Math.random() * scatterRadius;
 				x = centerX + Math.cos(angle) * radius - iconSize / 2;
 				y = centerY + Math.sin(angle) * radius - iconSize / 2;
 
@@ -165,16 +146,7 @@
 
 			if (valid) {
 				positions.push({ x: x!, y: y! });
-
-				ctx.save();
-				if (config.rotation) {
-					const angle = ((rng() - 0.5) * Math.PI) / 4;
-					ctx.translate(x! + iconSize / 2, y! + iconSize / 2);
-					ctx.rotate(angle);
-					ctx.translate(-(x! + iconSize / 2), -(y! + iconSize / 2));
-				}
 				drawIcon(ctx, img, x!, y!, iconSize);
-				ctx.restore();
 			}
 		});
 	}
@@ -216,13 +188,6 @@
 		});
 	}
 
-	function seededRandom(seed: number) {
-		return () => {
-			seed = (seed * 16807 + 0) % 2147483647;
-			return (seed - 1) / 2147483646;
-		};
-	}
-
 	function downloadWallpaper() {
 		const link = document.createElement('a');
 		link.download = `wallicon-${theme.id}-${width}x${height}.png`;
@@ -232,6 +197,10 @@
 
 	$effect(() => {
 		if (canvas && selectedIcons.length > 0) {
+			void config.layout;
+			void config.iconSize;
+			void config.spacing;
+			void config.opacity;
 			generateWallpaper();
 		}
 	});

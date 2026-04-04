@@ -14,13 +14,10 @@ export interface Theme {
 }
 
 export type LayoutMode = 'grid' | 'scatter' | 'arc' | 'spiral';
-export type IconStyle = 'circle' | 'square' | 'rounded' | 'none';
 
 export interface WallpaperConfig {
 	layout: LayoutMode;
-	iconStyle: IconStyle;
 	iconSize: number;
 	spacing: number;
 	opacity: number;
-	rotation: boolean;
 }

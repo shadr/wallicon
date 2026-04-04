@@ -3,20 +3,16 @@
 	import ThemeSelector from '$lib/ThemeSelector.svelte';
 	import WallpaperConfig from '$lib/WallpaperConfig.svelte';
 	import WallpaperGenerator from '$lib/WallpaperGenerator.svelte';
-	import type { Icon } from '$lib/types';
-	import type { Theme } from '$lib/types';
-	import type { WallpaperConfig as WallpaperConfigType } from '$lib/types';
+	import type { Icon, Theme, WallpaperConfig as WallpaperConfigType } from '$lib/types';
 	import { themes } from '$lib/themes';
 
 	let selectedIcons = $state<Icon[]>([]);
 	let selectedTheme = $state<Theme>(themes[0]);
 	let config = $state<WallpaperConfigType>({
 		layout: 'grid',
-		iconStyle: 'none',
 		iconSize: 120,
 		spacing: 20,
-		opacity: 0.9,
-		rotation: false
+		opacity: 0.9
 	});
 
 	let activeSection = $state<'icons' | 'theme' | 'config'>('icons');
