@@ -12,7 +12,8 @@
 	let { selectedTheme, onSelect }: Props = $props();
 
 	let searchQuery = $state('');
-	let currentPage = $state(0);
+	let visibleCount = $state(THEMES_PER_PAGE);
+	let sentinel: HTMLDivElement;
 
 	const filteredThemes = $derived(
 		searchQuery.length > 0
@@ -20,14 +21,33 @@
 			: themes
 	);
 
-	const totalPages = $derived(Math.ceil(filteredThemes.length / THEMES_PER_PAGE));
-	const visibleThemes = $derived(
-		filteredThemes.slice(0, (currentPage + 1) * THEMES_PER_PAGE)
-	);
+	const visibleThemes = $derived(filteredThemes.slice(0, visibleCount));
+
+	$effect(() => {
+		visibleCount = THEMES_PER_PAGE;
+	});
 
 	function selectTheme(theme: Theme) {
 		onSelect(theme);
 	}
+
+	// IntersectionObserver for infinite scroll
+	$effect(() => {
+		if (!sentinel || searchQuery.length > 0) return;
+		if (visibleCount >= filteredThemes.length) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) {
+					visibleCount += THEMES_PER_PAGE;
+				}
+			},
+			{ rootMargin: '200px' }
+		);
+
+		observer.observe(sentinel);
+		return () => observer.disconnect();
+	});
 </script>
 
 <div class="space-y-4">
@@ -35,7 +55,6 @@
 		type="text"
 		placeholder="Search {themes.length} themes..."
 		bind:value={searchQuery}
-		oninput={() => currentPage = 0}
 		class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-transparent focus:ring-2 focus:ring-violet-500/40"
 	/>
 
@@ -64,16 +83,8 @@
 		{/each}
 	</div>
 
-	{#if currentPage < totalPages - 1 && searchQuery.length === 0}
-		<div class="flex justify-center">
-			<button
-				class="rounded-lg bg-white/5 px-4 py-1.5 text-sm text-gray-400 ring-1 ring-white/10 transition-colors hover:bg-white/10 hover:text-gray-300"
-				onclick={() => currentPage++}
-			>
-				Load more ({visibleThemes.length} of {filteredThemes.length} shown)
-			</button>
-		</div>
-	{/if}
+	<!-- Sentinel for infinite scroll -->
+	<div bind:this={sentinel} class="h-1"></div>
 
 	{#if filteredThemes.length === 0}
 		<div class="py-8 text-center text-gray-500">
