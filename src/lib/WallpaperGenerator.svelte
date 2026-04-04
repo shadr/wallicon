@@ -110,12 +110,12 @@
 
 		if (layout === 'grid') {
 			drawGridLayout(ctx, iconImages, iconSize, spacing);
-		} else if (layout === 'scatter') {
-			drawScatterLayout(ctx, iconImages, iconSize);
+		} else if (layout === 'square-spiral') {
+			drawSquareSpiralLayout(ctx, iconImages, iconSize, spacing);
+		} else if (layout === 'hex-spiral') {
+			drawHexSpiralLayout(ctx, iconImages, iconSize, spacing);
 		} else if (layout === 'arc') {
 			drawArcLayout(ctx, iconImages, iconSize);
-		} else if (layout === 'spiral') {
-			drawSpiralLayout(ctx, iconImages, iconSize);
 		}
 
 		isGenerating = false;
@@ -141,45 +141,96 @@
 		});
 	}
 
-	function drawScatterLayout(
+	function drawSquareSpiralLayout(
 		ctx: CanvasRenderingContext2D,
 		iconImages: HTMLImageElement[],
-		iconSize: number
+		iconSize: number,
+		spacing: number
 	) {
 		const centerX = width / 2;
 		const centerY = height / 2;
-		const scatterRadius = Math.min(width, height) * 0.35;
-		const minDist = iconSize * 1.4;
-		const positions: Array<{ x: number; y: number }> = [];
+		const step = iconSize + spacing;
+		// Generate square spiral: E, S, W, W, N, N, E, E, E, S, S, S, ...
+		// Direction cycle: right, down, left, up
+		const dirs = [
+			{ dx: 1, dy: 0 },
+			{ dx: 0, dy: 1 },
+			{ dx: -1, dy: 0 },
+			{ dx: 0, dy: -1 }
+		];
+
+		const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
+		let x = 0, y = 0;
+		let dirIdx = 0, stepsInSeg = 0, segLength = 1, segsAtLen = 0;
+
+		while (points.length < iconImages.length) {
+			const d = dirs[dirIdx % 4];
+			x += d.dx;
+			y += d.dy;
+			points.push({ x, y });
+			stepsInSeg++;
+
+			if (stepsInSeg === segLength) {
+				stepsInSeg = 0;
+				dirIdx++;
+				segsAtLen++;
+				if (segsAtLen === 2) {
+					segsAtLen = 0;
+					segLength++;
+				}
+			}
+		}
 
 		iconImages.forEach((img, i) => {
-			let x: number, y: number;
-			let attempts = 0;
-			let valid = false;
+			const px = centerX + points[i].x * step - iconSize / 2;
+			const py = centerY + points[i].y * step - iconSize / 2;
+			drawIcon(ctx, img, px, py, iconSize);
+		});
+	}
 
-			while (!valid && attempts < 300) {
-				const angle = Math.random() * Math.PI * 2;
-				const radius = Math.random() * scatterRadius;
-				x = centerX + Math.cos(angle) * radius - iconSize / 2;
-				y = centerY + Math.sin(angle) * radius - iconSize / 2;
+	function drawHexSpiralLayout(
+		ctx: CanvasRenderingContext2D,
+		iconImages: HTMLImageElement[],
+		iconSize: number,
+		spacing: number
+	) {
+		const centerX = width / 2;
+		const centerY = height / 2;
+		const step = iconSize + spacing;
+		const rowH = step * 0.866025; // sqrt(3)/2
 
-				valid = true;
-				for (const pos of positions) {
-					const dx = x - pos.x;
-					const dy = y - pos.y;
-					const distance = Math.sqrt(dx * dx + dy * dy);
-					if (distance < minDist) {
-						valid = false;
-						break;
-					}
+		// Generate hex ring coordinates: ring 0 = center, ring n = 6*n cells
+		const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
+
+		let ring = 1;
+		while (points.length < iconImages.length) {
+			// 6 directions for hex ring, each direction walked (ring) times
+			const dirs = [
+				{ dx: 1, dy: 0 },    // E
+				{ dx: 0, dy: 1 },    // SE
+				{ dx: -1, dy: 1 },   // SW
+				{ dx: -1, dy: 0 },   // W
+				{ dx: 0, dy: -1 },   // NW
+				{ dx: 1, dy: -1 }    // NE
+			];
+
+			let hx = 0, hy = -ring; // Start at top of ring
+			for (let d = 0; d < 6; d++) {
+				const dir = dirs[d];
+				for (let s = 0; s < ring && points.length < iconImages.length; s++) {
+					hx += dir.dx;
+					hy += dir.dy;
+					points.push({ x: hx, y: hy });
 				}
-				attempts++;
 			}
+			ring++;
+		}
 
-			if (valid) {
-				positions.push({ x: x!, y: y! });
-				drawIcon(ctx, img, x!, y!, iconSize);
-			}
+		iconImages.forEach((img, i) => {
+			// Convert axial hex coords to screen: offset X by y/2 for proper hex layout
+			const px = centerX + (points[i].x + points[i].y * 0.5) * step - iconSize / 2;
+			const py = centerY + points[i].y * rowH - iconSize / 2;
+			drawIcon(ctx, img, px, py, iconSize);
 		});
 	}
 
@@ -201,25 +252,6 @@
 		});
 	}
 
-	function drawSpiralLayout(
-		ctx: CanvasRenderingContext2D,
-		iconImages: HTMLImageElement[],
-		iconSize: number
-	) {
-		const centerX = width / 2;
-		const centerY = height / 2;
-		const maxRadius = Math.min(width, height) * 0.4;
-
-		iconImages.forEach((img, i) => {
-			const t = iconImages.length === 1 ? 0 : i / (iconImages.length - 1);
-			const angle = t * Math.PI * 6;
-			const radius = t * maxRadius;
-			const x = centerX + Math.cos(angle) * radius - iconSize / 2;
-			const y = centerY + Math.sin(angle) * radius - iconSize / 2;
-			drawIcon(ctx, img, x, y, iconSize);
-		});
-	}
-
 	function downloadWallpaper() {
 		const link = document.createElement('a');
 		link.download = `wallicon-${theme.id}-${width}x${height}.png`;
@@ -229,7 +261,6 @@
 
 	$effect(() => {
 		if (canvas && selectedIcons.length > 0) {
-			// Clear SVG cache when theme changes so icons get recolored
 			svgCache.clear();
 			void config.layout;
 			void config.iconSize;

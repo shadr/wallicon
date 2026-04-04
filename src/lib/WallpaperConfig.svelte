@@ -10,9 +10,9 @@
 
 	const layouts: { value: LayoutMode; label: string; icon: string }[] = [
 		{ value: 'grid', label: 'Grid', icon: '⊞' },
-		{ value: 'scatter', label: 'Scatter', icon: '✦' },
-		{ value: 'arc', label: 'Arc', icon: '◐' },
-		{ value: 'spiral', label: 'Spiral', icon: '◎' }
+		{ value: 'square-spiral', label: 'Sq Spiral', icon: '⊡' },
+		{ value: 'hex-spiral', label: 'Hex Spiral', icon: '⬡' },
+		{ value: 'arc', label: 'Arc', icon: '◐' }
 	];
 </script>
 
