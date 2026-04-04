@@ -119,7 +119,7 @@ async function main() {
 	console.log(`Fetched ${ok} OK, ${fail} failed`);
 
 	// Generate TypeScript output
-	const accentKeys = ['base08','base09','base0A','base0B','base0C','base0D','base0E','base0F','base12','base13','base14','base15','base16','base17'];
+	const accentKeys = ['base08','base09','base0A','base0B','base0C','base0D','base0E','base0F'];
 	const tsLines = [
 		'// Auto-generated from tinted-theming/schemes base24',
 		'// https://github.com/tinted-theming/schemes',
