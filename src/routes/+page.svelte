@@ -87,78 +87,102 @@
 	<meta name="description" content="Generate beautiful wallpapers from your favorite software icons" />
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-	<header class="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-		<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-			<div class="flex items-center justify-between">
-				<div>
-					<h1 class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-3xl font-bold text-transparent">
-						Wallicon
-					</h1>
-					<p class="mt-1 text-gray-600 dark:text-gray-400">Generate beautiful wallpapers from software icons</p>
+<div class="flex min-h-screen flex-col bg-[#0e1117] text-gray-100">
+	<!-- Header -->
+	<header class="sticky top-0 z-50 border-b border-white/5 bg-[#0e1117]/80 backdrop-blur-xl">
+		<div class="mx-auto flex h-14 max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
+			<div class="flex items-center gap-3">
+				<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-500 text-sm font-bold">
+					W
 				</div>
-				{#if selectedIcons.length > 0}
-					<div class="rounded-lg bg-blue-50 px-4 py-2 dark:bg-blue-900/30">
-						<span class="font-medium text-blue-600">{selectedIcons.length} selected</span>
-					</div>
-				{/if}
+				<h1 class="text-lg font-semibold tracking-tight">Wallicon</h1>
+				<span class="hidden text-sm text-gray-500 sm:block">/</span>
+				<span class="hidden text-sm text-gray-400 sm:block">Icon Wallpaper Generator</span>
 			</div>
+			{#if selectedIcons.length > 0}
+				<div class="flex items-center gap-2 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-400 ring-1 ring-violet-500/20">
+					<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+					</svg>
+					{selectedIcons.length} selected
+				</div>
+			{/if}
 		</div>
 	</header>
 
-	<main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-		<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-			<!-- Left Panel: Configuration -->
-			<div class="space-y-6">
-				<!-- Mobile Tab Switcher -->
-				<div class="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800 lg:hidden">
-					{#each ['icons' as const, 'theme' as const, 'config' as const] as section}
-						<button
-							class="flex-1 rounded-md px-4 py-2 text-sm font-medium capitalize transition-colors {activeSection === section ? 'bg-white shadow dark:bg-gray-700' : ''}"
-							onclick={() => activeSection = section}
-						>
-							{section === 'config' ? 'Settings' : section}
-						</button>
-					{/each}
-				</div>
+	<!-- Mobile Tab Switcher -->
+	<div class="sticky top-14 z-40 border-b border-white/5 bg-[#0e1117]/90 backdrop-blur-lg lg:hidden">
+		<div class="flex gap-1 p-2">
+			{#each ['icons' as const, 'theme' as const, 'config' as const] as section}
+				<button
+					class="flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors {activeSection === section ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-gray-300'}"
+					onclick={() => activeSection = section}
+				>
+					{section === 'icons' ? 'Icons' : section === 'theme' ? 'Theme' : 'Settings'}
+				</button>
+			{/each}
+		</div>
+	</div>
 
-				<!-- Icons Section -->
-				<div class="{activeSection !== 'icons' ? 'hidden lg:block' : ''}">
-					<div class="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
-						<h2 class="mb-4 text-xl font-semibold">Select Icons</h2>
-						<IconSelector {selectedIcons} onToggle={toggleIcon} />
-					</div>
+	<!-- Main Content -->
+	<main class="mx-auto flex w-full max-w-[1600px] flex-1">
+		<!-- Left: Icons Panel -->
+		<div class="w-full flex-1 border-r border-white/5 {activeSection !== 'icons' ? 'hidden lg:flex' : 'flex'}">
+			<div class="flex w-full flex-col">
+				<div class="flex items-center gap-2 border-b border-white/5 px-4 py-3">
+					<svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+					</svg>
+					<h2 class="text-sm font-medium">Icons</h2>
 				</div>
-
-				<!-- Theme Section -->
-				<div class="{activeSection !== 'theme' ? 'hidden lg:block' : ''}">
-					<div class="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
-						<h2 class="mb-4 text-xl font-semibold">Color Theme</h2>
-						<ThemeSelector {selectedTheme} onSelect={selectTheme} />
-					</div>
+				<div class="flex-1 overflow-y-auto p-4">
+					<IconSelector {selectedIcons} onToggle={toggleIcon} />
 				</div>
+			</div>
+		</div>
 
-				<!-- Config Section -->
-				<div class="{activeSection !== 'config' ? 'hidden lg:block' : ''}">
-					<div class="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
-						<h2 class="mb-4 text-xl font-semibold">Layout & Style</h2>
-						<WallpaperConfig config={config} onChange={updateConfig} />
-					</div>
+		<!-- Center: Theme + Config Panel -->
+		<div class="hidden lg:flex w-72 flex-shrink-0 flex-col border-r border-white/5">
+			<!-- Theme -->
+			<div class="{activeSection === 'config' ? 'hidden' : ''}">
+				<div class="flex items-center gap-2 border-b border-white/5 px-4 py-3">
+					<svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+					</svg>
+					<h2 class="text-sm font-medium">Theme</h2>
+				</div>
+				<div class="max-h-[40vh] overflow-y-auto p-3">
+					<ThemeSelector {selectedTheme} onSelect={selectTheme} />
 				</div>
 			</div>
 
-			<!-- Right Panel: Preview -->
-			<div class="self-start lg:sticky lg:top-8">
-				<div class="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
+			<!-- Config -->
+			<div class="{activeSection === 'theme' ? 'hidden' : ''}">
+				<div class="flex items-center gap-2 border-b border-white/5 px-4 py-3">
+					<svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+					</svg>
+					<h2 class="text-sm font-medium">Layout</h2>
+				</div>
+				<div class="overflow-y-auto p-4">
+					<WallpaperConfig config={config} onChange={updateConfig} />
+				</div>
+			</div>
+		</div>
+
+		<!-- Right: Preview Panel -->
+		<div class="w-full flex-1 {activeSection !== 'icons' ? 'hidden lg:flex' : 'flex'} lg:max-w-[55%]">
+			<div class="flex w-full flex-col">
+				<div class="flex items-center gap-2 border-b border-white/5 px-4 py-3">
+					<svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+					</svg>
+					<h2 class="text-sm font-medium">Preview</h2>
+				</div>
+				<div class="flex-1 overflow-y-auto p-4">
 					<WallpaperGenerator {selectedIcons} theme={selectedTheme} {config} />
 				</div>
 			</div>
 		</div>
 	</main>
-
-	<footer class="mt-16 border-t border-gray-200 py-8 dark:border-gray-700">
-		<div class="mx-auto max-w-7xl px-4 text-center text-sm text-gray-500 sm:px-6 lg:px-8">
-			<p>Wallicon — Create beautiful wallpapers with your favorite icons</p>
-		</div>
-	</footer>
 </div>

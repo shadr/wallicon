@@ -273,60 +273,55 @@
 </script>
 
 <div class="space-y-4">
-	<div class="flex items-center justify-between">
-		<h3 class="text-lg font-semibold">Preview</h3>
-		<div class="flex gap-2">
-			<select
-				class="rounded-lg border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
-				onchange={(e) => {
-					const [w, h] = (e.target as HTMLSelectElement).value.split('x').map(Number);
-					width = w;
-					height = h;
-				}}
-			>
-				<option value="1920x1080">1920×1080</option>
-				<option value="2560x1440">2560×1440</option>
-				<option value="3840x2160">3840×2160</option>
-				<option value="1366x768">1366×768</option>
-				<option value="1080x1920">1080×1920 (Portrait)</option>
-				<option value="1080x1080">1080×1080 (Square)</option>
-			</select>
-			<button
-				class="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-				disabled={selectedIcons.length === 0 || isGenerating}
-				onclick={downloadWallpaper}
-			>
-				{#if isGenerating}
-					<span class="flex items-center gap-2">
-						<svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-							<circle
-								class="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								stroke-width="4"
-								fill="none"
-							></circle>
-							<path
-								class="opacity-75"
-								fill="currentColor"
-								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-							></path>
-						</svg>
-						Generating...
-					</span>
-				{:else}
-					Download PNG
-				{/if}
-			</button>
-		</div>
+	<div class="flex items-center justify-between gap-3">
+		<select
+			class="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300 focus:border-transparent focus:ring-2 focus:ring-violet-500/40"
+			onchange={(e) => {
+				const [w, h] = (e.target as HTMLSelectElement).value.split('x').map(Number);
+				width = w;
+				height = h;
+			}}
+		>
+			<option value="1920x1080">1920 × 1080</option>
+			<option value="2560x1440">2560 × 1440</option>
+			<option value="3840x2160">3840 × 2160</option>
+			<option value="1366x768">1366 × 768</option>
+			<option value="1080x1920">1080 × 1920 (Portrait)</option>
+			<option value="1080x1080">1080 × 1080 (Square)</option>
+		</select>
+		<button
+			class="rounded-lg bg-violet-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+			disabled={selectedIcons.length === 0 || isGenerating}
+			onclick={downloadWallpaper}
+		>
+			{#if isGenerating}
+				<span class="flex items-center gap-1.5">
+					<svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+					</svg>
+					Generating
+				</span>
+			{:else}
+				<span class="flex items-center gap-1.5">
+					<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+					</svg>
+					Download
+				</span>
+			{/if}
+		</button>
 	</div>
 
-	<div class="overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+	<div class="overflow-hidden rounded-xl border border-white/10 bg-white/5">
 		{#if selectedIcons.length === 0}
-			<div class="flex h-96 items-center justify-center bg-gray-100 dark:bg-gray-800">
-				<p class="text-gray-500">Select some icons to generate your wallpaper</p>
+			<div class="flex h-72 flex-col items-center justify-center gap-3">
+				<div class="flex h-12 w-12 items-center justify-center rounded-full bg-white/5">
+					<svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+					</svg>
+				</div>
+				<p class="text-sm text-gray-500">Select icons to generate your wallpaper</p>
 			</div>
 		{:else}
 			<canvas bind:this={canvas} {width} {height} class="h-auto w-full"></canvas>
@@ -334,8 +329,12 @@
 	</div>
 
 	{#if selectedIcons.length > 0}
-		<p class="text-center text-sm text-gray-500">
-			{selectedIcons.length} icon{selectedIcons.length !== 1 ? 's' : ''} • {theme.name} • {config.layout} • {width}×{height}
-		</p>
+		<div class="flex items-center justify-center gap-1.5 text-xs text-gray-500">
+			<span>{selectedIcons.length} icon{selectedIcons.length !== 1 ? 's' : ''}</span>
+			<span class="text-gray-700">•</span>
+			<span>{config.layout}</span>
+			<span class="text-gray-700">•</span>
+			<span>{width}×{height}</span>
+		</div>
 	{/if}
 </div>

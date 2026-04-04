@@ -1,1 +1,38 @@
 @import 'tailwindcss';
+
+html {
+	color-scheme: dark;
+}
+
+body {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Thin scrollbar for panels */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+/* Range input styling */
+input[type='range']::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: #8b5cf6;
+	cursor: pointer;
+	border: 2px solid #1e1b4b;
+	box-shadow: 0 0 4px rgba(139, 92, 246, 0.4);
+}

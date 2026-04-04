@@ -51,17 +51,17 @@
 			type="text"
 			placeholder="Search {totalIcons} icons..."
 			bind:value={searchQuery}
-			class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:flex-1"
+			class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-transparent focus:ring-2 focus:ring-violet-500/40 sm:flex-1"
 		/>
 	</div>
 
 	{#if selectedIcons.length > 0}
 		<div class="flex flex-wrap gap-1">
 			{#each selectedIcons as icon}
-				<span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+				<span class="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-0.5 text-xs font-medium text-violet-400 ring-1 ring-violet-500/20">
 					{icon.title}
 					<button
-						class="ml-1 hover:text-blue-900 dark:hover:text-blue-100"
+						class="ml-0.5 text-violet-300 hover:text-violet-200"
 						onclick={() => onToggle(icon)}
 					>
 						&times;
@@ -71,26 +71,25 @@
 		</div>
 	{/if}
 
-	<div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
+	<div class="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-6 xl:grid-cols-8">
 		{#each displayedIcons as icon}
 			<button
-				class="relative p-3 rounded-xl border-2 transition-all hover:scale-105 {isSelected(icon.slug) ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'}"
+				class="group relative rounded-lg border border-white/10 bg-white/5 p-2.5 transition-all hover:border-white/20 hover:bg-white/10 {isSelected(icon.slug) ? 'border-violet-500/50 bg-violet-500/10' : ''}"
 				onclick={() => handleToggle(icon)}
 			>
-				<div class="aspect-square mb-1 flex items-center justify-center">
+				<div class="aspect-square mb-1.5 flex items-center justify-center">
 					<img
 						src={getIconSvgUrl(icon.slug)}
 						alt={icon.title}
-						class="w-full h-full object-contain"
-						style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));"
+						class="h-full w-full object-contain"
 						loading="lazy"
 					/>
 				</div>
-				<p class="text-[10px] font-medium text-center truncate text-gray-700 dark:text-gray-300">{icon.title}</p>
+				<p class="text-[10px] font-medium text-center truncate text-gray-400 group-hover:text-gray-300">{icon.title}</p>
 				{#if isSelected(icon.slug)}
-					<div class="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-						<svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+					<div class="absolute top-1 right-1 h-4 w-4 rounded-full bg-violet-500 flex items-center justify-center">
+						<svg class="h-2.5 w-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
 						</svg>
 					</div>
 				{/if}
@@ -99,9 +98,9 @@
 	</div>
 
 	{#if !isSearching && searchQuery.length === 0 && currentPage < totalPages - 1}
-		<div class="text-center">
+		<div class="flex justify-center">
 			<button
-				class="px-6 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+				class="rounded-lg bg-white/5 px-5 py-2 text-sm text-gray-400 ring-1 ring-white/10 transition-colors hover:bg-white/10 hover:text-gray-300"
 				onclick={loadMore}
 			>
 				Load more ({displayedIcons.length} of {totalIcons} shown)
@@ -110,7 +109,7 @@
 	{/if}
 
 	{#if displayedIcons.length === 0 && !isSearching}
-		<div class="text-center py-12 text-gray-500">
+		<div class="py-12 text-center text-gray-500">
 			<p>No icons found</p>
 		</div>
 	{/if}
