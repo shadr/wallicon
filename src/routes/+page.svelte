@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import IconSelector from '$lib/IconSelector.svelte';
 	import ThemeSelector from '$lib/ThemeSelector.svelte';
 	import WallpaperConfig from '$lib/WallpaperConfig.svelte';
 	import WallpaperGenerator from '$lib/WallpaperGenerator.svelte';
 	import type { Icon, Theme, WallpaperConfig as WallpaperConfigType } from '$lib/types';
 	import { themes } from '$lib/themes';
+	import { encodeState, decodeState } from '$lib/state';
+	import { getIconBySlug } from '$lib/icons';
 
 	let selectedIcons = $state<Icon[]>([]);
 	let selectedTheme = $state<Theme>(themes[0]);
@@ -16,6 +19,47 @@
 	});
 
 	let activeSection = $state<'icons' | 'theme' | 'config'>('icons');
+	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Load state from URL on mount
+	onMount(() => {
+		const query = window.location.search.slice(1);
+		const saved = decodeState(query);
+
+		if (saved.theme) {
+			const found = themes.find((t) => t.id === saved.theme);
+			if (found) selectedTheme = found;
+		}
+
+		if (saved.config) {
+			config = saved.config;
+		}
+
+		if (saved.icons) {
+			const loaded: Icon[] = [];
+			for (const slug of saved.icons) {
+				const icon = getIconBySlug(slug);
+				if (icon) loaded.push({ ...icon, svg: '' });
+			}
+			selectedIcons = loaded;
+		}
+	});
+
+	// Save state to URL on changes (debounced)
+	function pushState() {
+		const state = {
+			icons: selectedIcons.map((i) => i.slug),
+			theme: selectedTheme.id,
+			config
+		};
+		const url = encodeState(state);
+		window.history.replaceState({}, '', url);
+	}
+
+	function scheduleUrlUpdate() {
+		if (saveTimeout) clearTimeout(saveTimeout);
+		saveTimeout = setTimeout(pushState, 300);
+	}
 
 	function toggleIcon(icon: Icon) {
 		const index = selectedIcons.findIndex((i) => i.id === icon.id);
@@ -24,14 +68,17 @@
 		} else {
 			selectedIcons = selectedIcons.filter((i) => i.id !== icon.id);
 		}
+		scheduleUrlUpdate();
 	}
 
 	function selectTheme(theme: Theme) {
 		selectedTheme = theme;
+		scheduleUrlUpdate();
 	}
 
 	function updateConfig(newConfig: WallpaperConfigType) {
 		config = { ...newConfig };
+		scheduleUrlUpdate();
 	}
 </script>
 
