@@ -19,46 +19,96 @@
 
 	// Persistent caches — survive across renders
 	const svgTextCache = new Map<string, string>();
-	const imageCache = new Map<string, HTMLImageElement>();
+	const imageCache = new Map<string, Map<string, HTMLImageElement>>();
 
-	async function loadAllImages(): Promise<HTMLImageElement[]> {
-		const images: HTMLImageElement[] = [];
-		for (const icon of selectedIcons) {
-			const cached = imageCache.get(icon.slug);
-			if (cached) {
-				images.push(cached);
-				continue;
+	// Assign colors to maximize sum of pairwise distances between same-colored icons
+	function assignColors(
+		positions: Array<{ x: number; y: number }>,
+		colors: string[]
+	): string[] {
+		const n = positions.length;
+		const k = colors.length;
+		if (k === 0) return Array(n).fill('#ffffff');
+
+		const result: string[] = new Array(n);
+		const assigned = new Set<number>();
+		const colorPositions: number[][] = colors.map(() => []);
+
+		for (let i = 0; i < n; i++) {
+			const colorIdx = i % k;
+			let bestPos = -1;
+			let bestScore = -1;
+
+			for (let p = 0; p < n; p++) {
+				if (assigned.has(p)) continue;
+
+				let score = Infinity;
+				for (const cp of colorPositions[colorIdx]) {
+					const dx = positions[p].x - positions[cp].x;
+					const dy = positions[p].y - positions[cp].y;
+					const dist = Math.sqrt(dx * dx + dy * dy);
+					if (dist < score) score = dist;
+				}
+
+				if (colorPositions[colorIdx].length === 0) score = 0;
+
+				if (score > bestScore) {
+					bestScore = score;
+					bestPos = p;
+				}
 			}
 
-			let svgText = svgTextCache.get(icon.slug);
-			if (!svgText) {
-				const res = await fetch(getIconSvgUrl(icon.slug));
-				svgText = await res.text();
-				svgTextCache.set(icon.slug, svgText);
+			if (bestPos !== -1) {
+				assigned.add(bestPos);
+				result[bestPos] = colors[colorIdx];
+				colorPositions[colorIdx].push(bestPos);
 			}
+		}
 
-			const accentColor = theme.accentColors.length > 0
-				? theme.accentColors[Math.floor(Math.random() * theme.accentColors.length)]
-				: '#ffffff';
+		return result;
+	}
 
-			const recolored = svgText
-				.replace(/<svg /, `<svg fill="${accentColor}" `)
-				.replace(/fill="([^"]*?)"/g, (m, v) => {
-					if (v === 'none' || v === 'transparent') return m;
-					return `fill="${accentColor}"`;
-				});
+	async function loadIconWithColor(icon: { slug: string }, color: string): Promise<HTMLImageElement> {
+		const cacheKey = `${icon.slug}:${color}`;
+		const cached = imageCache.get(icon.slug)?.get(color);
+		if (cached) return cached;
 
-			const blob = new Blob([recolored], { type: 'image/svg+xml;charset=utf-8' });
-			const url = URL.createObjectURL(blob);
+		let svgText = svgTextCache.get(icon.slug);
+		if (!svgText) {
+			const res = await fetch(getIconSvgUrl(icon.slug));
+			svgText = await res.text();
+			svgTextCache.set(icon.slug, svgText);
+		}
 
-			const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-				const i = new Image();
-				i.onload = () => { URL.revokeObjectURL(url); resolve(i); };
-				i.onerror = () => { URL.revokeObjectURL(url); reject(new Error(icon.title)); };
-				i.src = url;
+		const recolored = svgText
+			.replace(/<svg /, `<svg fill="${color}" `)
+			.replace(/fill="([^"]*?)"/g, (m, v) => {
+				if (v === 'none' || v === 'transparent') return m;
+				return `fill="${color}"`;
 			});
 
-			imageCache.set(icon.slug, img);
+		const blob = new Blob([recolored], { type: 'image/svg+xml;charset=utf-8' });
+		const url = URL.createObjectURL(blob);
+
+		const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+			const i = new Image();
+			i.onload = () => { URL.revokeObjectURL(url); resolve(i); };
+			i.onerror = () => { URL.revokeObjectURL(url); reject(new Error(icon.slug)); };
+			i.src = url;
+		});
+
+		if (!imageCache.has(icon.slug)) imageCache.set(icon.slug, new Map());
+		imageCache.get(icon.slug)!.set(color, img);
+		return img;
+	}
+
+	async function loadAllImages(
+		icons: Array<{ slug: string }>,
+		colors: string[]
+	): Promise<HTMLImageElement[]> {
+		const images: HTMLImageElement[] = [];
+		for (let i = 0; i < icons.length; i++) {
+			const img = await loadIconWithColor(icons[i], colors[i]);
 			images.push(img);
 		}
 		return images;
@@ -88,228 +138,168 @@
 		ctx.fillStyle = theme.background;
 		ctx.fillRect(0, 0, width, height);
 
-		const iconImages = await loadAllImages();
 		const { layout, iconSize, spacing } = config;
 
-		if (layout === 'grid') {
-			drawGridLayout(ctx, iconImages, iconSize, spacing);
-		} else if (layout === 'square-spiral') {
-			drawSquareSpiralLayout(ctx, iconImages, iconSize, spacing);
-		} else if (layout === 'hex-spiral') {
-			drawHexSpiralLayout(ctx, iconImages, iconSize, spacing);
-		} else if (layout === 'hex-symmetric') {
-			drawHexSymmetricLayout(ctx, iconImages, iconSize, spacing);
-		} else if (layout === 'arc') {
-			drawArcLayout(ctx, iconImages, iconSize);
-		}
+		// 1. Compute positions
+		const positions = computePositions(layout, selectedIcons.length, iconSize, spacing);
+
+		// 2. Assign colors to maximize same-color distances
+		const colors = assignColors(positions, theme.accentColors);
+
+		// 3. Load images with assigned colors
+		const iconImages = await loadAllImages(selectedIcons, colors);
+
+		// 4. Draw
+		iconImages.forEach((img, i) => {
+			const px = positions[i].x - iconSize / 2;
+			const py = positions[i].y - iconSize / 2;
+			drawIcon(ctx, img, px, py, iconSize);
+		});
 
 		isGenerating = false;
 	}
 
-	function redrawCanvas() {
-		if (!canvas || selectedIcons.length === 0) return;
-		const ctx = canvas.getContext('2d');
-		if (!ctx) return;
-
-		const images = selectedIcons.map(i => imageCache.get(i.slug)).filter(Boolean) as HTMLImageElement[];
-		if (images.length === 0) return;
-
-		ctx.clearRect(0, 0, width, height);
-		ctx.fillStyle = theme.background;
-		ctx.fillRect(0, 0, width, height);
-
-		const { layout, iconSize, spacing } = config;
-
-		if (layout === 'grid') drawGridLayout(ctx, images, iconSize, spacing);
-		else if (layout === 'square-spiral') drawSquareSpiralLayout(ctx, images, iconSize, spacing);
-		else if (layout === 'hex-spiral') drawHexSpiralLayout(ctx, images, iconSize, spacing);
-		else if (layout === 'hex-symmetric') drawHexSymmetricLayout(ctx, images, iconSize, spacing);
-		else if (layout === 'arc') drawArcLayout(ctx, images, iconSize);
-	}
-
-	function drawGridLayout(
-		ctx: CanvasRenderingContext2D,
-		iconImages: HTMLImageElement[],
+	function computePositions(
+		layout: string,
+		count: number,
 		iconSize: number,
 		spacing: number
-	) {
-		const cols = Math.max(1, Math.floor((width - spacing) / (iconSize + spacing)));
-		const rows = Math.ceil(iconImages.length / cols);
-		const startX = (width - (cols * (iconSize + spacing) - spacing)) / 2;
-		const startY = (height - (rows * (iconSize + spacing) - spacing)) / 2;
-
-		iconImages.forEach((img, i) => {
-			const col = i % cols;
-			const row = Math.floor(i / cols);
-			const x = startX + col * (iconSize + spacing);
-			const y = startY + row * (iconSize + spacing);
-			drawIcon(ctx, img, x, y, iconSize);
-		});
-	}
-
-	function drawSquareSpiralLayout(
-		ctx: CanvasRenderingContext2D,
-		iconImages: HTMLImageElement[],
-		iconSize: number,
-		spacing: number
-	) {
+	): Array<{ x: number; y: number }> {
 		const centerX = width / 2;
 		const centerY = height / 2;
 		const step = iconSize + spacing;
-		const dirs = [
-			{ dx: 1, dy: 0 },
-			{ dx: 0, dy: 1 },
-			{ dx: -1, dy: 0 },
-			{ dx: 0, dy: -1 }
-		];
 
-		const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
-		let x = 0, y = 0;
-		let dirIdx = 0, stepsInSeg = 0, segLength = 1, segsAtLen = 0;
+		if (layout === 'grid') {
+			const cols = Math.max(1, Math.floor((width - spacing) / (iconSize + spacing)));
+			const rows = Math.ceil(count / cols);
+			const startX = (width - (cols * (iconSize + spacing) - spacing)) / 2;
+			const startY = (height - (rows * (iconSize + spacing) - spacing)) / 2;
 
-		while (points.length < iconImages.length) {
-			const d = dirs[dirIdx % 4];
-			x += d.dx;
-			y += d.dy;
-			points.push({ x, y });
-			stepsInSeg++;
-			if (stepsInSeg === segLength) {
-				stepsInSeg = 0;
-				dirIdx++;
-				segsAtLen++;
-				if (segsAtLen === 2) { segsAtLen = 0; segLength++; }
-			}
+			return Array.from({ length: count }, (_, i) => ({
+				x: startX + (i % cols) * step,
+				y: startY + Math.floor(i / cols) * step
+			}));
 		}
 
-		iconImages.forEach((img, i) => {
-			const px = centerX + points[i].x * step - iconSize / 2;
-			const py = centerY + points[i].y * step - iconSize / 2;
-			drawIcon(ctx, img, px, py, iconSize);
-		});
-	}
+		if (layout === 'square-spiral') {
+			const dirs = [
+				{ dx: 1, dy: 0 }, { dx: 0, dy: 1 },
+				{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }
+			];
+			const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
+			let x = 0, y = 0;
+			let dirIdx = 0, stepsInSeg = 0, segLength = 1, segsAtLen = 0;
 
-	function drawHexSpiralLayout(
-		ctx: CanvasRenderingContext2D,
-		iconImages: HTMLImageElement[],
-		iconSize: number,
-		spacing: number
-	) {
-		const centerX = width / 2;
-		const centerY = height / 2;
-		const step = iconSize + spacing;
-		const rowH = step * 0.866025;
-
-		const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
-		let ring = 1;
-		const dirs = [
-			{ dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 1 },
-			{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 }
-		];
-
-		while (points.length < iconImages.length) {
-			let hx = 0, hy = -ring;
-			for (let d = 0; d < 6; d++) {
-				const dir = dirs[d];
-				for (let s = 0; s < ring && points.length < iconImages.length; s++) {
-					hx += dir.dx; hy += dir.dy;
-					points.push({ x: hx, y: hy });
-				}
-			}
-			ring++;
-		}
-
-		iconImages.forEach((img, i) => {
-			const px = centerX + (points[i].x + points[i].y * 0.5) * step - iconSize / 2;
-			const py = centerY + points[i].y * rowH - iconSize / 2;
-			drawIcon(ctx, img, px, py, iconSize);
-		});
-	}
-
-	function drawHexSymmetricLayout(
-		ctx: CanvasRenderingContext2D,
-		iconImages: HTMLImageElement[],
-		iconSize: number,
-		spacing: number
-	) {
-		const centerX = width / 2;
-		const centerY = height / 2;
-		const step = iconSize + spacing;
-		const rowH = step * 0.866025;
-
-		// Build symmetrically-ordered hex ring points
-		const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
-		const dirs = [
-			{ dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 1 },
-			{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 }
-		];
-
-		let ring = 1;
-		while (points.length < iconImages.length) {
-			const ringPoints: Array<{ x: number; y: number }> = [];
-			let hx = 0, hy = -ring;
-			for (let d = 0; d < 6; d++) {
-				const dir = dirs[d];
-				for (let s = 0; s < ring; s++) {
-					hx += dir.dx;
-					hy += dir.dy;
-					ringPoints.push({ x: hx, y: hy });
+			while (points.length < count) {
+				const d = dirs[dirIdx % 4];
+				x += d.dx; y += d.dy;
+				points.push({ x, y });
+				stepsInSeg++;
+				if (stepsInSeg === segLength) {
+					stepsInSeg = 0; dirIdx++; segsAtLen++;
+					if (segsAtLen === 2) { segsAtLen = 0; segLength++; }
 				}
 			}
 
-			// Create opposite pairs and sort by extremeness
-			const screenY = (p: { x: number; y: number }) => p.y * 0.866025;
-			const used = new Set<string>();
-			const pairs: Array<{ top: { x: number; y: number }; bottom: { x: number; y: number }; score: number }> = [];
-
-			for (const p of ringPoints) {
-				const key = `${p.x},${p.y}`;
-				if (used.has(key)) continue;
-				const opp = ringPoints.find(q => q.x === -p.x && q.y === -p.y);
-				if (!opp) continue;
-				const oppKey = `${opp.x},${opp.y}`;
-				used.add(key);
-				used.add(oppKey);
-
-				const score = Math.max(Math.abs(screenY(p)), Math.abs(screenY(opp)));
-				const top = screenY(p) < screenY(opp) ? p : opp;
-				const bottom = screenY(p) < screenY(opp) ? opp : p;
-				pairs.push({ top, bottom, score });
-			}
-
-			// Ring 1: axis-first (ascending extremeness), Ring 2+: extreme-first (descending)
-			pairs.sort((a, b) => ring === 1 ? a.score - b.score : b.score - a.score);
-
-			// Interleave each pair: top then bottom
-			for (const { top, bottom } of pairs) {
-				points.push(top, bottom);
-			}
-
-			ring++;
+			return points.map(p => ({
+				x: centerX + p.x * step,
+				y: centerY + p.y * step
+			}));
 		}
 
-		iconImages.forEach((img, i) => {
-			const px = centerX + (points[i].x + points[i].y * 0.5) * step - iconSize / 2;
-			const py = centerY + points[i].y * rowH - iconSize / 2;
-			drawIcon(ctx, img, px, py, iconSize);
-		});
-	}
+		if (layout === 'hex-spiral') {
+			const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
+			const dirs = [
+				{ dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 1 },
+				{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 }
+			];
+			let ring = 1;
+			while (points.length < count) {
+				let hx = 0, hy = -ring;
+				for (let d = 0; d < 6; d++) {
+					const dir = dirs[d];
+					for (let s = 0; s < ring; s++) {
+						hx += dir.dx; hy += dir.dy;
+						points.push({ x: hx, y: hy });
+					}
+				}
+				ring++;
+			}
 
-	function drawArcLayout(
-		ctx: CanvasRenderingContext2D,
-		iconImages: HTMLImageElement[],
-		iconSize: number
-	) {
-		const centerX = width / 2;
-		const centerY = height / 2;
-		const radius = Math.min(width, height) * 0.35;
-		const angleStep = (Math.PI * 2) / iconImages.length;
+			const rowH = step * 0.866025;
+			return points.map(p => ({
+				x: centerX + (p.x + p.y * 0.5) * step,
+				y: centerY + p.y * rowH
+			}));
+		}
 
-		iconImages.forEach((img, i) => {
-			const angle = i * angleStep - Math.PI / 2;
-			const x = centerX + Math.cos(angle) * radius - iconSize / 2;
-			const y = centerY + Math.sin(angle) * radius - iconSize / 2;
-			drawIcon(ctx, img, x, y, iconSize);
-		});
+		if (layout === 'hex-symmetric') {
+			const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
+			const dirs = [
+				{ dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 1 },
+				{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 }
+			];
+			let ring = 1;
+			while (points.length < count) {
+				const ringPoints: Array<{ x: number; y: number }> = [];
+				let hx = 0, hy = -ring;
+				for (let d = 0; d < 6; d++) {
+					const dir = dirs[d];
+					for (let s = 0; s < ring; s++) {
+						hx += dir.dx; hy += dir.dy;
+						ringPoints.push({ x: hx, y: hy });
+					}
+				}
+
+				const screenY = (p: { x: number; y: number }) => p.y * 0.866025;
+				const used = new Set<string>();
+				const pairs: Array<{ top: { x: number; y: number }; bottom: { x: number; y: number }; score: number }> = [];
+
+				for (const p of ringPoints) {
+					const key = `${p.x},${p.y}`;
+					if (used.has(key)) continue;
+					const opp = ringPoints.find(q => q.x === -p.x && q.y === -p.y);
+					if (!opp) continue;
+					const oppKey = `${opp.x},${opp.y}`;
+					used.add(key); used.add(oppKey);
+
+					const score = Math.max(Math.abs(screenY(p)), Math.abs(screenY(opp)));
+					const top = screenY(p) < screenY(opp) ? p : opp;
+					const bottom = screenY(p) < screenY(opp) ? opp : p;
+					pairs.push({ top, bottom, score });
+				}
+
+				pairs.sort((a, b) => ring === 1 ? a.score - b.score : b.score - a.score);
+				for (const { top, bottom } of pairs) {
+					points.push(top, bottom);
+				}
+				ring++;
+			}
+
+			const rowH = step * 0.866025;
+			return points.map(p => ({
+				x: centerX + (p.x + p.y * 0.5) * step,
+				y: centerY + p.y * rowH
+			}));
+		}
+
+		if (layout === 'arc') {
+			const radius = Math.min(width, height) * 0.35;
+			const angleStep = (Math.PI * 2) / count;
+			return Array.from({ length: count }, (_, i) => {
+				const angle = i * angleStep - Math.PI / 2;
+				return {
+					x: centerX + Math.cos(angle) * radius,
+					y: centerY + Math.sin(angle) * radius
+				};
+			});
+		}
+
+		// fallback: grid
+		return Array.from({ length: count }, (_, i) => ({
+			x: centerX + (i % 5) * step,
+			y: centerY + Math.floor(i / 5) * step
+		}));
 	}
 
 	function downloadWallpaper() {
@@ -326,24 +316,23 @@
 	$effect(() => {
 		if (!canvas || selectedIcons.length === 0) return;
 
-		const curKey = selectedIcons.map(i => i.slug).join(',');
-		const needsReload = curKey !== prevIconsKey || theme.id !== prevThemeId;
-
-		// Explicit dependency reads so Svelte tracks them
 		void config.layout;
 		void config.iconSize;
 		void config.spacing;
 		void config.opacity;
+		void theme.id;
 
-		if (needsReload) {
+		const curKey = selectedIcons.map(i => i.slug).join(',');
+		const needsFullReload = curKey !== prevIconsKey || theme.id !== prevThemeId;
+
+		if (needsFullReload) {
 			prevIconsKey = curKey;
 			prevThemeId = theme.id;
+			// Clear image cache for new icons/theme
 			imageCache.clear();
-			svgTextCache.clear();
-			generateWallpaper();
-		} else {
-			redrawCanvas();
 		}
+
+		generateWallpaper();
 	});
 </script>
 
