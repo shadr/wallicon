@@ -142,7 +142,7 @@
 		</div>
 
 		<!-- Center: Theme + Config Panel -->
-		<div class="hidden lg:flex w-72 flex-shrink-0 flex-col border-r border-white/5">
+		<div class="hidden lg:flex w-96 flex-shrink-0 flex-col border-r border-white/5">
 			<!-- Theme -->
 			<div class="{activeSection === 'config' ? 'hidden' : ''}">
 				<div class="flex items-center gap-2 border-b border-white/5 px-4 py-3">

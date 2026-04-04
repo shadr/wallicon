@@ -71,7 +71,7 @@
 		</div>
 	{/if}
 
-	<div class="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-6 xl:grid-cols-8">
+	<div class="grid grid-cols-7 gap-2">
 		{#each displayedIcons as icon}
 			<button
 				class="group relative rounded-lg border border-white/10 bg-white/5 p-2.5 transition-all hover:border-white/20 hover:bg-white/10 {isSelected(icon.slug) ? 'border-violet-500/50 bg-violet-500/10' : ''}"
