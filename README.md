@@ -1,42 +1,55 @@
-# sv
+# Wallicon
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A wallpaper generator that creates wallpapers from software icons using [Simple Icons](https://simpleicons.org/) and [tinted-theming](https://github.com/tinted-theming/schemes) base24 color schemes.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **3417+ icons** from [Simple Icons](https://simpleicons.org/)
+- **184 themes** from the [tinted-theming/schemes](https://github.com/tinted-theming/schemes) base24 collection
+- **5 layout modes**: grid, square-spiral, hex-spiral, hex-symmetric, and arc
 
-```sh
-# create a new project
-npx sv create my-app
-```
+## Getting Started
 
-To recreate this project with the same configuration:
+### Prerequisites
 
-```sh
-# recreate this project
-bun x sv@0.14.0 create --template minimal --types ts --add prettier eslint tailwindcss="plugins:none" --install bun wallicon
-```
+- [Bun](https://bun.sh/) (or npm/pnpm/yarn)
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Install
 
 ```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+bun install
 ```
 
-## Building
-
-To create a production version of your app:
+### Development
 
 ```sh
-npm run build
+bun run dev
 ```
 
-You can preview the production build with `npm run preview`.
+Open `http://localhost:5173` in your browser.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+### Production Build
+
+```sh
+bun run build
+bun run preview
+```
+
+### Code Quality
+
+```sh
+bun run check    # TypeScript type checking
+bun run lint     # Prettier + ESLint
+bun run format   # Format code with Prettier
+```
+
+## Deployment
+
+This app is a fully client-side SPA. To deploy to GitHub Pages:
+
+1. Push to the `main` branch — the included GitHub Actions workflow will build and deploy automatically.
+2. In your repo settings, go to **Settings → Pages → Source** and select **GitHub Actions**.
+
+## License
+
+[MIT](LICENSE)
