@@ -185,15 +185,37 @@
 		iconSize: number,
 		spacing: number
 	): Array<{ x: number; y: number }> {
+		const halfIcon = iconSize / 2;
+		const margin = spacing;
+		const minX = margin + halfIcon;
+		const minY = margin + halfIcon;
+		const maxX = width - margin - halfIcon;
+		const maxY = height - margin - halfIcon;
 		const centerX = width / 2;
 		const centerY = height / 2;
 		const step = iconSize + spacing;
 
+		function inBounds(x: number, y: number): boolean {
+			return x >= minX && x <= maxX && y >= minY && y <= maxY;
+		}
+
+		function filterToBounds(pts: Array<{ x: number; y: number }>): Array<{ x: number; y: number }> {
+			const result: Array<{ x: number; y: number }> = [];
+			for (const p of pts) {
+				if (inBounds(p.x, p.y)) {
+					result.push(p);
+				}
+			}
+			return result;
+		}
+
 		if (layout === 'grid') {
-			const cols = Math.max(1, Math.floor((width - spacing) / (iconSize + spacing)));
+			const cols = Math.max(1, Math.floor((width - 2 * margin) / step));
 			const rows = Math.ceil(count / cols);
-			const startX = (width - (cols * (iconSize + spacing) - spacing)) / 2;
-			const startY = (height - (rows * (iconSize + spacing) - spacing)) / 2;
+			const gridW = cols * step - spacing;
+			const gridH = rows * step - spacing;
+			const startX = (width - gridW) / 2;
+			const startY = (height - gridH) / 2;
 
 			return Array.from({ length: count }, (_, i) => ({
 				x: startX + (i % cols) * step,
@@ -210,7 +232,7 @@
 			let x = 0, y = 0;
 			let dirIdx = 0, stepsInSeg = 0, segLength = 1, segsAtLen = 0;
 
-			while (points.length < count) {
+			while (points.length < count * 3) {
 				const d = dirs[dirIdx % 4];
 				x += d.dx; y += d.dy;
 				points.push({ x, y });
@@ -221,10 +243,11 @@
 				}
 			}
 
-			return points.map(p => ({
+			const pixelPoints = points.map(p => ({
 				x: centerX + p.x * step,
 				y: centerY + p.y * step
 			}));
+			return filterToBounds(pixelPoints).slice(0, count);
 		}
 
 		if (layout === 'hex-spiral') {
@@ -234,7 +257,7 @@
 				{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 }
 			];
 			let ring = 1;
-			while (points.length < count) {
+			while (points.length < count * 3) {
 				let hx = 0, hy = -ring;
 				for (let d = 0; d < 6; d++) {
 					const dir = dirs[d];
@@ -247,10 +270,11 @@
 			}
 
 			const rowH = step * 0.866025;
-			return points.map(p => ({
+			const pixelPoints = points.map(p => ({
 				x: centerX + (p.x + p.y * 0.5) * step,
 				y: centerY + p.y * rowH
 			}));
+			return filterToBounds(pixelPoints).slice(0, count);
 		}
 
 		if (layout === 'hex-symmetric') {
@@ -260,7 +284,7 @@
 				{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 }
 			];
 			let ring = 1;
-			while (points.length < count) {
+			while (points.length < count * 3) {
 				const ringPoints: Array<{ x: number; y: number }> = [];
 				let hx = 0, hy = -ring;
 				for (let d = 0; d < 6; d++) {
@@ -297,10 +321,11 @@
 			}
 
 			const rowH = step * 0.866025;
-			return points.map(p => ({
+			const pixelPoints = points.map(p => ({
 				x: centerX + (p.x + p.y * 0.5) * step,
 				y: centerY + p.y * rowH
 			}));
+			return filterToBounds(pixelPoints).slice(0, count);
 		}
 
 		if (layout === 'arc') {
