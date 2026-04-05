@@ -39,7 +39,7 @@
 			const loaded: Icon[] = [];
 			for (const slug of saved.icons) {
 				const icon = getIconBySlug(slug);
-				if (icon) loaded.push({ ...icon, svg: '' });
+				if (icon) loaded.push(icon);
 			}
 			selectedIcons = loaded;
 		}
@@ -101,7 +101,7 @@
 			</div>
 			{#if selectedIcons.length > 0}
 				<div class="flex items-center gap-2 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-400 ring-1 ring-violet-500/20">
-					<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 					</svg>
 					{selectedIcons.length} selected
@@ -116,6 +116,7 @@
 			{#each ['icons' as const, 'theme' as const, 'config' as const] as section}
 				<button
 					class="flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors {activeSection === section ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-gray-300'}"
+					aria-pressed={activeSection === section}
 					onclick={() => activeSection = section}
 				>
 					{section === 'icons' ? 'Icons' : section === 'theme' ? 'Theme' : 'Settings'}

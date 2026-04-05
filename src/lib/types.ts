@@ -3,7 +3,6 @@ export interface Icon {
 	title: string;
 	hex: string;
 	slug: string;
-	svg?: string;
 }
 
 export interface Theme {

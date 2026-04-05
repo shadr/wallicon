@@ -25,6 +25,7 @@
 	const visibleIcons = $derived(filteredIcons.slice(0, visibleCount));
 
 	$effect(() => {
+		searchQuery;
 		visibleCount = INITIAL_CHUNK;
 	});
 
@@ -56,6 +57,7 @@
 <div class="space-y-4">
 	<input
 		type="text"
+		aria-label="Search icons"
 		placeholder="Search {totalIcons} icons..."
 		bind:value={searchQuery}
 		class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-transparent focus:ring-2 focus:ring-violet-500/40"
@@ -87,6 +89,7 @@
 				)
 					? 'border-violet-500/50 bg-violet-500/10'
 					: ''}"
+				aria-pressed={isSelected(icon.slug)}
 				onclick={() => handleToggle(icon)}
 			>
 				<div class="mb-1.5 flex aspect-square items-center justify-center">
@@ -105,12 +108,14 @@
 				{#if isSelected(icon.slug)}
 					<div
 						class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500"
+						aria-hidden="true"
 					>
 						<svg
 							class="h-2.5 w-2.5 text-white"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
+							aria-hidden="true"
 						>
 							<path
 								stroke-linecap="round"

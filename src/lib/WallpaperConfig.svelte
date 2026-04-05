@@ -46,6 +46,7 @@
 			</label>
 			<span class="text-xs font-mono text-gray-500">{config.iconSize}px</span>
 		</div>
+		<!-- Triggers URL debounce in parent; bind:value alone already mutates the parent's config -->
 		<input
 			id="icon-size"
 			type="range"
@@ -66,6 +67,7 @@
 			</label>
 			<span class="text-xs font-mono text-gray-500">{config.spacing}px</span>
 		</div>
+		<!-- Triggers URL debounce in parent; bind:value alone already mutates the parent's config -->
 		<input
 			id="spacing"
 			type="range"
@@ -86,6 +88,7 @@
 			</label>
 			<span class="text-xs font-mono text-gray-500">{Math.round(config.opacity * 100)}%</span>
 		</div>
+		<!-- Triggers URL debounce in parent; bind:value alone already mutates the parent's config -->
 		<input
 			id="opacity-slider"
 			type="range"

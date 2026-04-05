@@ -6,6 +6,8 @@ interface State {
 	config: WallpaperConfig;
 }
 
+const VALID_LAYOUTS: LayoutMode[] = ['grid', 'square-spiral', 'hex-spiral', 'hex-symmetric', 'arc'];
+
 export function encodeState(state: State): string {
 	const params = new URLSearchParams();
 
@@ -54,16 +56,20 @@ export function decodeState(query: string): Partial<State> {
 	}
 
 	// Config
-	const layout = params.get('layout') as LayoutMode | null;
+	const layoutParam = params.get('layout');
+	const layout: LayoutMode =
+		layoutParam && VALID_LAYOUTS.includes(layoutParam as LayoutMode)
+			? (layoutParam as LayoutMode)
+			: 'grid';
 	const size = params.get('size');
 	const space = params.get('space');
 	const opacity = params.get('opacity');
 
 	state.config = {
-		layout: layout || 'grid',
-		iconSize: size ? Number(size) : 120,
-		spacing: space ? Number(space) : 20,
-		opacity: opacity ? Number(opacity) : 0.9
+		layout,
+		iconSize: size && !isNaN(Number(size)) ? Number(size) : 120,
+		spacing: space && !isNaN(Number(space)) ? Number(space) : 20,
+		opacity: opacity && !isNaN(Number(opacity)) ? Number(opacity) : 0.9
 	};
 
 	return state;

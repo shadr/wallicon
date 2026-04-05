@@ -1,7 +1,5 @@
 <script lang="ts">
-	import type { Icon } from '$lib/types';
-	import type { Theme } from '$lib/types';
-	import type { WallpaperConfig } from '$lib/types';
+	import type { Icon, Theme, WallpaperConfig, LayoutMode } from '$lib/types';
 	import { getIconSvgUrl } from '$lib/icons';
 
 	interface Props {
@@ -14,9 +12,12 @@
 
 	let { selectedIcons, theme, config, width = 1920, height = 1080 }: Props = $props();
 
-	let canvas: HTMLCanvasElement = $state() as HTMLCanvasElement;
+	let canvas: HTMLCanvasElement | undefined = $state();
 	let isGenerating = $state(false);
 	let shuffleSeed = $state(0);
+
+	// Token to cancel stale async generations (plain let, NOT $state — avoids self-triggering $effect)
+	let generationCounter = 0;
 
 	// Persistent caches — survive across renders
 	const svgTextCache = new Map<string, string>();
@@ -128,8 +129,9 @@
 		ctx.restore();
 	}
 
-	async function generateWallpaper() {
+	async function generateWallpaper(token: number) {
 		if (selectedIcons.length === 0) return;
+		if (!canvas) return;
 
 		isGenerating = true;
 		const ctx = canvas.getContext('2d');
@@ -144,7 +146,6 @@
 		// Shuffle icons if seed is non-zero
 		const shuffled = shuffleSeed > 0 ? [...selectedIcons] : selectedIcons;
 		if (shuffleSeed > 0) {
-			// Fisher-Yates seeded shuffle
 			let seed = shuffleSeed;
 			const rand = () => {
 				seed = (seed * 16807 + 0) % 2147483647;
@@ -165,6 +166,9 @@
 		// 3. Load images with assigned colors
 		const iconImages = await loadAllImages(shuffled, colors);
 
+		// Bail if a newer generation was triggered
+		if (token !== generationCounter) return;
+
 		// 4. Draw
 		iconImages.forEach((img, i) => {
 			const px = positions[i].x - iconSize / 2;
@@ -176,7 +180,7 @@
 	}
 
 	function computePositions(
-		layout: string,
+		layout: LayoutMode,
 		count: number,
 		iconSize: number,
 		spacing: number
@@ -319,6 +323,7 @@
 	}
 
 	function downloadWallpaper() {
+		if (!canvas) return;
 		const link = document.createElement('a');
 		link.download = `wallicon-${theme.id}-${width}x${height}.png`;
 		link.href = canvas.toDataURL('image/png');
@@ -339,17 +344,17 @@
 		void theme.id;
 		void shuffleSeed;
 
+		const token = ++generationCounter;
 		const curKey = selectedIcons.map(i => i.slug).join(',');
 		const needsFullReload = curKey !== prevIconsKey || theme.id !== prevThemeId;
 
 		if (needsFullReload) {
 			prevIconsKey = curKey;
 			prevThemeId = theme.id;
-			// Clear image cache for new icons/theme
 			imageCache.clear();
 		}
 
-		generateWallpaper();
+		generateWallpaper(token);
 	});
 
 	function shuffleIcons() {
@@ -412,14 +417,20 @@
 		{#if selectedIcons.length === 0}
 			<div class="flex h-72 flex-col items-center justify-center gap-3">
 				<div class="flex h-12 w-12 items-center justify-center rounded-full bg-white/5">
-					<svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
 					</svg>
 				</div>
 				<p class="text-sm text-gray-500">Select icons to generate your wallpaper</p>
 			</div>
 		{:else}
-			<canvas bind:this={canvas} {width} {height} class="h-auto w-full"></canvas>
+			<canvas
+				bind:this={canvas}
+				{width}
+				{height}
+				class="h-auto w-full"
+				aria-label="Generated wallpaper preview"
+			></canvas>
 		{/if}
 	</div>
 
