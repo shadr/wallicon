@@ -58,49 +58,21 @@ function parseYaml(text) {
 	return result;
 }
 
+async function fetchAllSlugs() {
+	const res = await fetch(
+		`https://api.github.com/repos/tinted-theming/schemes/contents/base24?ref=${BRANCH}`
+	);
+	if (!res.ok) throw new Error(`Failed to fetch directory: ${res.status}`);
+	const items = await res.json();
+	return items
+		.filter((item) => item.name.endsWith('.yaml'))
+		.map((item) => item.name.replace('.yaml', ''))
+		.sort();
+}
+
 async function main() {
-	const slugs = [
-		'3024-day', '3024-night', 'adventure-time', 'alien-blood', 'argonaut',
-		'arthur', 'atelier-sulphurpool', 'ayu-dark', 'ayu-light', 'ayu-mirage',
-		'banana-blueberry', 'batman', 'birds-of-paradise', 'blazer', 'blue-berry-pie',
-		'blue-matrix', 'bluloco-dark', 'bluloco-light', 'borland', 'breeze',
-		'broadcast', 'brogrammer', 'builtin-dark', 'builtin-light', 'builtin-pastel-dark',
-		'builtin-solarized-dark', 'builtin-solarized-light', 'catppuccin-frappe',
-		'catppuccin-latte', 'catppuccin-macchiato', 'catppuccin-mocha', 'chalk',
-		'chalkboard', 'challenger-deep', 'ciapre', 'clrs', 'cobalt-neon', 'cobalt2',
-		'crayon-pony-fish', 'cyberdyne', 'dark-plus', 'deep-oceanic-next', 'deep',
-		'desert', 'dimmed-monokai', 'dracula', 'earthsong', 'eldritch', 'elemental',
-		'elementary', 'embarcadero', 'encom', 'espresso-libre', 'espresso',
-		'fideloper', 'firefox-dev', 'fish-tank', 'flat', 'flatland',
-		'flexoki-dark', 'flexoki-light', 'floraverse', 'forest-blue', 'framer',
-		'front-end-delight', 'fun-forrest', 'galaxy', 'github-dark', 'github',
-		'grape', 'gruvbox-dark', 'gruvbox-light', 'hacktober', 'hardcore',
-		'highway', 'hipster-green', 'hivacruz', 'homebrew', 'hopscotch',
-		'hurtado', 'hybrid', 'ic-green-ppl', 'ic-orange-ppl', 'idea',
-		'idle-toes', 'jackie-brown', 'japanesque', 'jellybeans', 'jet-brains-darcula',
-		'kanagawa-dragon', 'kibble', 'lab-fox', 'laser', 'later-this-evening',
-		'lavandula', 'lovelace', 'man-page', 'material-dark', 'material',
-		'mathias', 'medallion', 'mission-brogue', 'misterioso', 'molokai',
-		'mona-lisa', 'monokai-vivid', 'mountain', 'night-lion-v1', 'night-lion-v2',
-		'night-owlish-light', 'nocturnal-winter', 'obsidian', 'ocean', 'oceanic-next',
-		'one-dark', 'one-light', 'outrun-dark', 'pandora', 'papercolor-dark',
-		'papercolor-light', 'paraiso', 'pasque', 'paul-millr', 'pinky',
-		'pop', 'porple', 'precious-dark-fifteen', 'precious-dark-warm',
-		'precious-light-warm', 'precious-light-white', 'primer', 'prism',
-		'purpledream', 'qualia', 'railscasts', 'rebecca', 'rose-pine-dawn',
-		'rose-pine-moon', 'rose-pine', 'saga', 'sagelight', 'sakura',
-		'sandcastle', 'seti-ui', 'shapeshifter', 'silk-dark', 'silk-light',
-		'snazzy', 'snazzy-light', 'solarflare', 'solarized-dark', 'solarized-light',
-		'spaceduck', 'spacegray-eighties', 'sparky', 'starry-night', 'summercamp',
-		'summerfruit-dark', 'summerfruit-light', 'synthwave', 'synthwave-everything',
-		'ta-one-dark', 'ta-one-light', 'tango', 'tender', 'terracotta',
-		'tokyo-night-dark', 'tokyo-night-light', 'tokyo-night-moon', 'tokyo-night-storm',
-		'tomorrow', 'tomorrow-night', 'tomorrow-night-bright', 'tomorrow-night-eighties',
-		'tube', 'twilight', 'unikitty-dark', 'unikitty-light', 'unique',
-		'unikitty-reversible', 'uwunicorn', 'vesper', 'vulcan', 'windows-10',
-		'windows-10-light', 'windows-95', 'windows-95-light', 'windows-highcontrast',
-		'windows-nt', 'wombat', 'woodland', 'xcode-dusk', 'zenburn'
-	];
+	const slugs = await fetchAllSlugs();
+	console.log(`Found ${slugs.length} themes in repo`);
 
 	console.log(`Fetching ${slugs.length} themes...`);
 
@@ -114,6 +86,8 @@ async function main() {
 		} else {
 			fail++;
 		}
+		// Small delay to avoid rate limiting
+		if ((ok + fail) % 50 === 0) await new Promise((r) => setTimeout(r, 1000));
 	}
 
 	console.log(`Fetched ${ok} OK, ${fail} failed`);

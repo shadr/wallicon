@@ -5,6 +5,12 @@ import type { Theme } from './types';
 
 export const themes: Theme[] = [
 	{
+		id: '0x96f',
+		name: '0x96f',
+		background: '#262427',
+		accentColors: ['#ff7272', '#fc9d6f', '#ffca58', '#bcdf59', '#aee8f4', '#49cae4', '#a093e2', '#ff8787']
+	},
+	{
 		id: '3024-day',
 		name: '3024 Day',
 		background: '#f7f7f7',
@@ -167,6 +173,18 @@ export const themes: Theme[] = [
 		accentColors: ['#dc322f', '#b58900', '#839496', '#859900', '#2aa198', '#268bd2', '#d33682', '#6e1917']
 	},
 	{
+		id: 'builtin-tango-dark',
+		name: 'Builtin Tango Dark',
+		background: '#000000',
+		accentColors: ['#cc0000', '#c4a000', '#719ecf', '#4e9a05', '#05989a', '#3464a4', '#74507a', '#660000']
+	},
+	{
+		id: 'builtin-tango-light',
+		name: 'Builtin Tango Light',
+		background: '#ffffff',
+		accentColors: ['#cc0000', '#c4a000', '#719ecf', '#4e9a05', '#05989a', '#3464a4', '#74507a', '#660000']
+	},
+	{
 		id: 'catppuccin-frappe',
 		name: 'Catppuccin Frappe',
 		background: '#303446',
@@ -251,16 +269,16 @@ export const themes: Theme[] = [
 		accentColors: ['#cd3131', '#e5e510', '#3b8eea', '#0dbc79', '#11a8cd', '#2472c8', '#bc3fbc', '#661818']
 	},
 	{
-		id: 'deep-oceanic-next',
-		name: 'Deep Oceanic Next',
-		background: '#001c1f',
-		accentColors: ['#d3464d', '#e37552', '#f3b863', '#63b784', '#4fb7ae', '#568ccf', '#8b66d6', '#d0658e']
-	},
-	{
 		id: 'deep',
 		name: 'deep',
 		background: '#080808',
 		accentColors: ['#d60005', '#d9bc25', '#9fa8fe', '#1cd815', '#4fd2d9', '#5665fe', '#af51d9', '#6b0002']
+	},
+	{
+		id: 'deep-oceanic-next',
+		name: 'Deep Oceanic Next',
+		background: '#001c1f',
+		accentColors: ['#d3464d', '#e37552', '#f3b863', '#63b784', '#4fb7ae', '#568ccf', '#8b66d6', '#d0658e']
 	},
 	{
 		id: 'desert',
@@ -317,16 +335,16 @@ export const themes: Theme[] = [
 		accentColors: ['#9f0000', '#ffcf00', '#0000ff', '#008b00', '#008b8b', '#0081ff', '#bc00ca', '#4f0000']
 	},
 	{
-		id: 'espresso-libre',
-		name: 'Espresso Libre',
-		background: '#2a211c',
-		accentColors: ['#cc0000', '#efe43a', '#43a8ed', '#1a921c', '#05989a', '#0066ff', '#c5656b', '#660000']
-	},
-	{
 		id: 'espresso',
 		name: 'Espresso',
 		background: '#262626',
 		accentColors: ['#d25151', '#ffc66d', '#8ab7d9', '#a5c261', '#bed6ff', '#6c99bb', '#d197d9', '#692828']
+	},
+	{
+		id: 'espresso-libre',
+		name: 'Espresso Libre',
+		background: '#2a211c',
+		accentColors: ['#cc0000', '#efe43a', '#43a8ed', '#1a921c', '#05989a', '#0066ff', '#c5656b', '#660000']
 	},
 	{
 		id: 'fideloper',
@@ -407,16 +425,16 @@ export const themes: Theme[] = [
 		accentColors: ['#f9555f', '#fdba29', '#fdf029', '#20af89', '#1e9ee6', '#589cf5', '#934d95', '#7c2a2f']
 	},
 	{
-		id: 'github-dark',
-		name: 'Github Dark',
-		background: '#161b22',
-		accentColors: ['#f85149', '#db6d28', '#bb8009', '#2ea043', '#2A9D9A', '#388bfd', '#a371f7', '#3D2F00']
-	},
-	{
 		id: 'github',
 		name: 'Github Light',
 		background: '#eaeef2',
 		accentColors: ['#fa4549', '#e16f24', '#bf8700', '#2da44e', '#339D9B', '#218bff', '#a475f9', '#4d2d00']
+	},
+	{
+		id: 'github-dark',
+		name: 'Github Dark',
+		background: '#161b22',
+		accentColors: ['#f85149', '#db6d28', '#bb8009', '#2ea043', '#2A9D9A', '#388bfd', '#a371f7', '#3D2F00']
 	},
 	{
 		id: 'grape',
@@ -587,15 +605,15 @@ export const themes: Theme[] = [
 		accentColors: ['#cc0000', '#999900', '#0000ff', '#00a600', '#00a6b2', '#0000b2', '#b200b2', '#660000']
 	},
 	{
-		id: 'material-dark',
-		name: 'Material Dark',
-		background: '#222221',
-		accentColors: ['#b7141e', '#f5971d', '#53a4f3', '#457b23', '#0e707c', '#134eb2', '#550087', '#5b0a0f']
-	},
-	{
 		id: 'material',
 		name: 'Material',
 		background: '#eaeaea',
+		accentColors: ['#b7141e', '#f5971d', '#53a4f3', '#457b23', '#0e707c', '#134eb2', '#550087', '#5b0a0f']
+	},
+	{
+		id: 'material-dark',
+		name: 'Material Dark',
+		background: '#222221',
 		accentColors: ['#b7141e', '#f5971d', '#53a4f3', '#457b23', '#0e707c', '#134eb2', '#550087', '#5b0a0f']
 	},
 	{
@@ -683,16 +701,46 @@ export const themes: Theme[] = [
 		accentColors: ['#990000', '#999900', '#0000ff', '#00a600', '#00a6b2', '#0000b2', '#b200b2', '#4c0000']
 	},
 	{
+		id: 'oceanic-material',
+		name: 'Oceanic Material',
+		background: '#1c262b',
+		accentColors: ['#ee2a29', '#fee92e', '#53a4f3', '#3fa33f', '#16aec9', '#1d80ef', '#8800a0', '#771514']
+	},
+	{
+		id: 'ollie',
+		name: 'Ollie',
+		background: '#212024',
+		accentColors: ['#ab2e30', '#ab4200', '#4487ff', '#31ab60', '#1fa5ab', '#2c56ab', '#af8427', '#551718']
+	},
+	{
+		id: 'one-black',
+		name: 'One Black',
+		background: '#000000',
+		accentColors: ['#e05561', '#d18f52', '#e6b965', '#8cc265', '#42b3c2', '#4aa5f0', '#c162de', '#bf4034']
+	},
+	{
 		id: 'one-dark',
 		name: 'One Dark',
 		background: '#282c34',
 		accentColors: ['#e05561', '#d18f52', '#e6b965', '#8cc265', '#42b3c2', '#4aa5f0', '#c162de', '#bf4034']
 	},
 	{
+		id: 'one-half-light',
+		name: 'One Half Light',
+		background: '#2A2B32',
+		accentColors: ['#e45649', '#c08400', '#c0aa00', '#4fa14f', '#0996b3', '#0084bc', '#a625a4', '#722b24']
+	},
+	{
 		id: 'one-light',
 		name: 'One Light',
 		background: '#e7e7e9',
 		accentColors: ['#ca1243', '#c18401', '#febb2a', '#50a14f', '#0184bc', '#4078f2', '#a626a4', '#986801']
+	},
+	{
+		id: 'operator-mono-dark',
+		name: 'Operator Mono Dark',
+		background: '#191919',
+		accentColors: ['#ca372d', '#d4d697', '#89d3f6', '#4d7b3a', '#72d4c6', '#4387cf', '#b86cb4', '#651b16']
 	},
 	{
 		id: 'pandora',
@@ -719,16 +767,220 @@ export const themes: Theme[] = [
 		accentColors: ['#ff0000', '#e7bf00', '#709aed', '#79ff0f', '#66ccff', '#386bd7', '#b349be', '#7f0000']
 	},
 	{
+		id: 'pencil-dark',
+		name: 'Pencil Dark',
+		background: '#212121',
+		accentColors: ['#c30771', '#a89c14', '#20bbfc', '#10a778', '#20a5ba', '#008ec4', '#523c79', '#610338']
+	},
+	{
+		id: 'pencil-light',
+		name: 'Pencil Light',
+		background: '#f1f1f1',
+		accentColors: ['#c30771', '#a89c14', '#20bbfc', '#10a778', '#20a5ba', '#008ec4', '#523c79', '#610338']
+	},
+	{
+		id: 'piatto-light',
+		name: 'Piatto Light',
+		background: '#ffffff',
+		accentColors: ['#b23771', '#cd6f34', '#cda434', '#66781e', '#1e7878', '#3c5ea8', '#a454b2', '#591b38']
+	},
+	{
+		id: 'pnevma',
+		name: 'Pnevma',
+		background: '#1c1c1c',
+		accentColors: ['#a36666', '#d7af87', '#a1bdce', '#90a57d', '#8adbb4', '#7fa5bd', '#c79ec4', '#513333']
+	},
+	{
+		id: 'pro',
+		name: 'Pro',
+		background: '#000000',
+		accentColors: ['#990000', '#999900', '#0000ff', '#00a600', '#00a6b2', '#1f08db', '#b200b2', '#4c0000']
+	},
+	{
+		id: 'pro-light',
+		name: 'Pro Light',
+		background: '#feffff',
+		accentColors: ['#e4492b', '#c58e40', '#c5c340', '#50d048', '#4ed1dd', '#3a75ff', '#ec65e7', '#722415']
+	},
+	{
+		id: 'purple-rain',
+		name: 'Purple Rain',
+		background: '#20084a',
+		accentColors: ['#ff260d', '#ffc400', '#00a5ff', '#9ae204', '#00ddef', '#00a1f9', '#805bb5', '#7f1306']
+	},
+	{
+		id: 'purplepeter',
+		name: 'Purplepeter',
+		background: '#2a1a4a',
+		accentColors: ['#ff786c', '#efdeab', '#79daed', '#98b481', '#b98cff', '#66d9ef', '#e68ecd', '#7f3c36']
+	},
+	{
 		id: 'rebecca',
 		name: 'Rebecca',
 		background: '#292a44',
 		accentColors: ['#dd7655', '#f2e7b7', '#69bffa', '#04dbb4', '#56d3c1', '#7aa5ff', '#be9bf8', '#6e3b2a']
 	},
 	{
+		id: 'red-alert',
+		name: 'Red Alert',
+		background: '#762423',
+		accentColors: ['#d52e4d', '#beb86b', '#65a9f0', '#71be6b', '#6bbeb8', '#479bed', '#e878d6', '#6a1726']
+	},
+	{
+		id: 'red-planet',
+		name: 'Red Planet',
+		background: '#222222',
+		accentColors: ['#8c3432', '#e8bf6a', '#60827e', '#728271', '#5b8390', '#69809e', '#896492', '#461a19']
+	},
+	{
+		id: 'red-sands',
+		name: 'Red Sands',
+		background: '#79241e',
+		accentColors: ['#ff3f00', '#e7b000', '#0071ae', '#00bb00', '#00bbbb', '#0071ff', '#bb00bb', '#7f1f00']
+	},
+	{
+		id: 'rippedcasts',
+		name: 'Rippedcasts',
+		background: '#2b2b2b',
+		accentColors: ['#cdaf95', '#bfbb1f', '#86bdc9', '#a7ff60', '#59647e', '#75a5b0', '#ff73fd', '#66574a']
+	},
+	{
+		id: 'royal',
+		name: 'Royal',
+		background: '#100814',
+		accentColors: ['#90274b', '#b49d27', '#8fb9f9', '#23801c', '#8aaabd', '#6480af', '#664d96', '#481325']
+	},
+	{
+		id: 'scarlet-protocol',
+		name: 'Scarlet Protocol',
+		background: '#1b153c',
+		accentColors: ['#ff0051', '#faf945', '#6871ff', '#00dc84', '#00c5c7', '#0271b6', '#c930c7', '#7f0028']
+	},
+	{
+		id: 'sea-shells',
+		name: 'Sea Shells',
+		background: '#08131a',
+		accentColors: ['#d15023', '#fca02f', '#1bbcdd', '#027c9b', '#50a3b5', '#1e4950', '#68d3f1', '#682811']
+	},
+	{
+		id: 'seafoam-pastel',
+		name: 'Seafoam Pastel',
+		background: '#243434',
+		accentColors: ['#825d4d', '#ada16d', '#79c3cf', '#718c61', '#719393', '#4d7b82', '#8a7167', '#412e26']
+	},
+	{
+		id: 'shades-of-purple',
+		name: 'Shades Of Purple',
+		background: '#1e1d40',
+		accentColors: ['#d90429', '#ffe700', '#6871ff', '#3ad900', '#00c5c7', '#6943ff', '#ff2b70', '#6c0214']
+	},
+	{
+		id: 'shaman',
+		name: 'Shaman',
+		background: '#001014',
+		accentColors: ['#b12f2c', '#5d8aa9', '#61d4b9', '#00a940', '#5c7e19', '#449985', '#00599c', '#581716']
+	},
+	{
+		id: 'slate',
+		name: 'Slate',
+		background: '#212121',
+		accentColors: ['#e1a7bf', '#c4c9bf', '#79afd2', '#80d778', '#14ab9c', '#254a49', '#a380d3', '#70535f']
+	},
+	{
+		id: 'sleepy-hollow',
+		name: 'Sleepy Hollow',
+		background: '#121213',
+		accentColors: ['#b93934', '#b45600', '#8085ef', '#90773e', '#8eaea9', '#5e62b4', '#a07c7b', '#5c1c1a']
+	},
+	{
+		id: 'smyck',
+		name: 'Smyck',
+		background: '#1b1b1b',
+		accentColors: ['#b74131', '#c4a400', '#8dcff0', '#7da900', '#207383', '#62a3c4', '#b98acc', '#5b2018']
+	},
+	{
+		id: 'solarized-dark-higher-contrast',
+		name: 'Solarized Dark Higher Contrast',
+		background: '#001e26',
+		accentColors: ['#d01b24', '#a57705', '#178dc7', '#6bbe6c', '#259185', '#2075c7', '#c61b6e', '#680d12']
+	},
+	{
+		id: 'solarized-dark-patched',
+		name: 'Solarized Dark Patched',
+		background: '#001e26',
+		accentColors: ['#d01b24', '#a57705', '#708183', '#728905', '#259185', '#2075c7', '#c61b6e', '#680d12']
+	},
+	{
+		id: 'space-gray-eighties',
+		name: 'Space Gray Eighties',
+		background: '#212121',
+		accentColors: ['#ec5f67', '#fdc253', '#4d83d0', '#80a763', '#57c2c0', '#5485c0', '#bf83c0', '#762f33']
+	},
+	{
+		id: 'space-gray-eighties-dull',
+		name: 'Space Gray Eighties Dull',
+		background: '#212121',
+		accentColors: ['#b14956', '#c6725a', '#5485c0', '#91b377', '#7fcccb', '#7b8fa4', '#a5779e', '#58242b']
+	},
+	{
+		id: 'spacedust',
+		name: 'Spacedust',
+		background: '#0a1e24',
+		accentColors: ['#e35a00', '#e3cd7b', '#67a0cd', '#5cab96', '#06afc7', '#0e548b', '#e35a00', '#712d00']
+	},
+	{
 		id: 'sparky',
 		name: 'Sparky',
 		background: '#072B31',
 		accentColors: ['#FF585D', '#FF8F1C', '#FBDD40', '#78D64B', '#2DCCD3', '#4698CB', '#D59ED7', '#9B704D']
+	},
+	{
+		id: 'spiderman',
+		name: 'Spiderman',
+		background: '#1b1d1e',
+		accentColors: ['#e60712', '#e24655', '#1d4fff', '#e22828', '#3255ff', '#2b3fff', '#2435db', '#730309']
+	},
+	{
+		id: 'square',
+		name: 'Square',
+		background: '#1a1a1a',
+		accentColors: ['#e9897c', '#ecebbe', '#b6defb', '#b6377d', '#c9caec', '#a9cdeb', '#75507b', '#74443e']
+	},
+	{
+		id: 'sundried',
+		name: 'Sundried',
+		background: '#1a1818',
+		accentColors: ['#a6463d', '#9c5f2a', '#7898f7', '#577644', '#9c814e', '#485a98', '#854551', '#53231e']
+	},
+	{
+		id: 'tango-adapted',
+		name: 'Tango Adapted',
+		background: '#feffff',
+		accentColors: ['#ff0000', '#ef9b00', '#efca00', '#59d500', '#00d0d6', '#00a1ff', '#c17ecb', '#7f0000']
+	},
+	{
+		id: 'tango-half-adapted',
+		name: 'Tango Half Adapted',
+		background: '#feffff',
+		accentColors: ['#ff0000', '#e28400', '#e2bf00', '#4cc300', '#00bdc3', '#008df5', '#a86bb2', '#7f0000']
+	},
+	{
+		id: 'terminal-basic',
+		name: 'Terminal Basic',
+		background: '#ffffff',
+		accentColors: ['#990000', '#999900', '#0000ff', '#00a600', '#00a6b2', '#0000b2', '#b200b2', '#4c0000']
+	},
+	{
+		id: 'thayer-bright',
+		name: 'Thayer Bright',
+		background: '#1b1d1e',
+		accentColors: ['#f92672', '#f3fd21', '#3f78ff', '#4df740', '#37c8b4', '#2656d6', '#8c54fe', '#7c1339']
+	},
+	{
+		id: 'the-hulk',
+		name: 'The Hulk',
+		background: '#1b1d1e',
+		accentColors: ['#259d1a', '#62e456', '#4f6a95', '#13ce2f', '#378ca9', '#2424f4', '#641e73', '#124e0d']
 	},
 	{
 		id: 'tokyo-night-dark',
@@ -761,16 +1013,94 @@ export const themes: Theme[] = [
 		accentColors: ['#cc6666', '#de935f', '#f0c674', '#b5bd68', '#8abeb7', '#81a2be', '#b294bb', '#a3685a']
 	},
 	{
+		id: 'toy-chest',
+		name: 'Toy Chest',
+		background: '#23364a',
+		accentColors: ['#be2d26', '#da8e26', '#33a5d9', '#199171', '#35a08f', '#325d96', '#8a5ddb', '#5f1613']
+	},
+	{
+		id: 'treehouse',
+		name: 'Treehouse',
+		background: '#191919',
+		accentColors: ['#b1270e', '#a9810b', '#85cfec', '#44a900', '#b2591d', '#578499', '#96363c', '#581307']
+	},
+	{
 		id: 'twilight',
 		name: 'Twilight',
 		background: '#141414',
 		accentColors: ['#c06c43', '#c2a86c', '#5a5d61', '#afb979', '#778284', '#444649', '#b4be7b', '#603621']
 	},
 	{
+		id: 'ubuntu',
+		name: 'Ubuntu',
+		background: '#300a24',
+		accentColors: ['#cc0000', '#c4a000', '#729fcf', '#4e9a06', '#06989a', '#3465a4', '#75507b', '#660000']
+	},
+	{
+		id: 'ultra-violet',
+		name: 'Ultra Violet',
+		background: '#242728',
+		accentColors: ['#ff0090', '#fff727', '#7febff', '#b5ff00', '#0effbb', '#47dffb', '#d630ff', '#7f0048']
+	},
+	{
+		id: 'under-the-sea',
+		name: 'Under The Sea',
+		background: '#001015',
+		accentColors: ['#b12f2c', '#58809c', '#61d4b9', '#00a940', '#5c7e19', '#449985', '#00599c', '#581716']
+	},
+	{
+		id: 'unikitty',
+		name: 'Unikitty',
+		background: '#ff7ad3',
+		accentColors: ['#a80f20', '#eeaa4b', '#eedf4b', '#bafc8b', '#6bd0bc', '#145fcd', '#ff36a2', '#540710']
+	},
+	{
+		id: 'vibrant-ink',
+		name: 'Vibrant Ink',
+		background: '#000000',
+		accentColors: ['#ff6600', '#ffcc00', '#0000ff', '#ccff04', '#44b3cc', '#44b3cc', '#9933cc', '#7f3300']
+	},
+	{
+		id: 'violet-dark',
+		name: 'Violet Dark',
+		background: '#1b1d1f',
+		accentColors: ['#c94c22', '#b4881d', '#2075c7', '#85981c', '#32a198', '#2e8bce', '#d13a82', '#642611']
+	},
+	{
+		id: 'violet-light',
+		name: 'Violet Light',
+		background: '#fcf4dc',
+		accentColors: ['#c94c22', '#b4881d', '#2075c7', '#85981c', '#32a198', '#2e8bce', '#d13a82', '#642611']
+	},
+	{
+		id: 'warm-neon',
+		name: 'Warm Neon',
+		background: '#3f3f3f',
+		accentColors: ['#e24345', '#dae145', '#7a90d5', '#38b139', '#29bad3', '#4260c5', '#f81ffb', '#712122']
+	},
+	{
+		id: 'wez',
+		name: 'Wez',
+		background: '#000000',
+		accentColors: ['#cc5555', '#cdcd55', '#5555ff', '#55cc55', '#7acaca', '#5455cb', '#cc55cc', '#662a2a']
+	},
+	{
+		id: 'wild-cherry',
+		name: 'Wild Cherry',
+		background: '#1f1626',
+		accentColors: ['#d94085', '#ffd16f', '#2f8bb9', '#2ab250', '#c1b8b7', '#883cdc', '#ececec', '#6c2042']
+	},
+	{
 		id: 'wombat',
 		name: 'Wombat',
 		background: '#171717',
 		accentColors: ['#ff605a', '#ead89c', '#a5c7ff', '#b1e869', '#82fff6', '#5da9f6', '#e86aff', '#7f302d']
+	},
+	{
+		id: 'wryan',
+		name: 'Wryan',
+		background: '#101010',
+		accentColors: ['#8c4665', '#7c7c99', '#477ab3', '#287373', '#31658c', '#395573', '#5e468c', '#462332']
 	},
 	{
 		id: 'zenburn',
