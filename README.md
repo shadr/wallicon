@@ -2,7 +2,9 @@
 
 A wallpaper generator that creates wallpapers from software icons using [Simple Icons](https://simpleicons.org/) and [tinted-theming](https://github.com/tinted-theming/schemes) base24 color schemes.
 
-![Example of a generated wallpaper with a bunch of software icons visible](/assets/preview.png)
+<p align="center">
+  <img src="/assets/preview.png" alt="Example of a generated wallpaper with a bunch of software icons visible" />
+</p>
 
 ## Features
 
