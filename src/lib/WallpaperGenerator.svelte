@@ -157,14 +157,17 @@
 			}
 		}
 
-		// 1. Compute positions
+		// 1. Compute positions — may return fewer than requested if layout can't fit them all
 		const positions = computePositions(layout, shuffled.length, iconSize, spacing);
+
+		// Truncate icons to fit available positions
+		const usableIcons = positions.length < shuffled.length ? shuffled.slice(0, positions.length) : shuffled;
 
 		// 2. Assign colors to maximize same-color distances
 		const colors = assignColors(positions, theme.accentColors);
 
 		// 3. Load images with assigned colors
-		const iconImages = await loadAllImages(shuffled, colors);
+		const iconImages = await loadAllImages(usableIcons, colors);
 
 		// Bail if a newer generation was triggered
 		if (token !== generationCounter) return;
@@ -199,16 +202,6 @@
 			return x >= minX && x <= maxX && y >= minY && y <= maxY;
 		}
 
-		function filterToBounds(pts: Array<{ x: number; y: number }>): Array<{ x: number; y: number }> {
-			const result: Array<{ x: number; y: number }> = [];
-			for (const p of pts) {
-				if (inBounds(p.x, p.y)) {
-					result.push(p);
-				}
-			}
-			return result;
-		}
-
 		if (layout === 'grid') {
 			const cols = Math.max(1, Math.floor((width - 2 * margin) / step));
 			const rows = Math.ceil(count / cols);
@@ -228,14 +221,21 @@
 				{ dx: 1, dy: 0 }, { dx: 0, dy: 1 },
 				{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }
 			];
-			const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
+			const validPoints: Array<{ x: number; y: number }> = [];
 			let x = 0, y = 0;
 			let dirIdx = 0, stepsInSeg = 0, segLength = 1, segsAtLen = 0;
+			const maxRings = 200; // safety cap
 
-			while (points.length < count * 3) {
+			// Center point
+			const cx = centerX, cy = centerY;
+			if (inBounds(cx, cy)) validPoints.push({ x: cx, y: cy });
+
+			while (validPoints.length < count && segLength <= maxRings) {
 				const d = dirs[dirIdx % 4];
 				x += d.dx; y += d.dy;
-				points.push({ x, y });
+				const px = centerX + x * step;
+				const py = centerY + y * step;
+				if (inBounds(px, py)) validPoints.push({ x: px, y: py });
 				stepsInSeg++;
 				if (stepsInSeg === segLength) {
 					stepsInSeg = 0; dirIdx++; segsAtLen++;
@@ -243,48 +243,53 @@
 				}
 			}
 
-			const pixelPoints = points.map(p => ({
-				x: centerX + p.x * step,
-				y: centerY + p.y * step
-			}));
-			return filterToBounds(pixelPoints).slice(0, count);
+			return validPoints.slice(0, count);
 		}
 
 		if (layout === 'hex-spiral') {
-			const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
+			const validPoints: Array<{ x: number; y: number }> = [];
 			const dirs = [
 				{ dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 1 },
 				{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 }
 			];
+			const rowH = step * 0.866025;
+			const maxRing = 200; // safety cap
+
+			// Center point
+			if (inBounds(centerX, centerY)) validPoints.push({ x: centerX, y: centerY });
+
 			let ring = 1;
-			while (points.length < count * 3) {
+			while (validPoints.length < count && ring <= maxRing) {
 				let hx = 0, hy = -ring;
 				for (let d = 0; d < 6; d++) {
 					const dir = dirs[d];
 					for (let s = 0; s < ring; s++) {
 						hx += dir.dx; hy += dir.dy;
-						points.push({ x: hx, y: hy });
+						const px = centerX + (hx + hy * 0.5) * step;
+						const py = centerY + hy * rowH;
+						if (inBounds(px, py)) validPoints.push({ x: px, y: py });
 					}
 				}
 				ring++;
 			}
 
-			const rowH = step * 0.866025;
-			const pixelPoints = points.map(p => ({
-				x: centerX + (p.x + p.y * 0.5) * step,
-				y: centerY + p.y * rowH
-			}));
-			return filterToBounds(pixelPoints).slice(0, count);
+			return validPoints.slice(0, count);
 		}
 
 		if (layout === 'hex-symmetric') {
-			const points: Array<{ x: number; y: number }> = [{ x: 0, y: 0 }];
+			const validPoints: Array<{ x: number; y: number }> = [];
 			const dirs = [
 				{ dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 1 },
 				{ dx: -1, dy: 0 }, { dx: 0, dy: -1 }, { dx: 1, dy: -1 }
 			];
+			const rowH = step * 0.866025;
+			const maxRing = 200; // safety cap
+
+			// Center point
+			if (inBounds(centerX, centerY)) validPoints.push({ x: centerX, y: centerY });
+
 			let ring = 1;
-			while (points.length < count * 3) {
+			while (validPoints.length < count && ring <= maxRing) {
 				const ringPoints: Array<{ x: number; y: number }> = [];
 				let hx = 0, hy = -ring;
 				for (let d = 0; d < 6; d++) {
@@ -315,17 +320,18 @@
 
 				pairs.sort((a, b) => ring === 1 ? a.score - b.score : b.score - a.score);
 				for (const { top, bottom } of pairs) {
-					points.push(top, bottom);
+					const ptx = centerX + (top.x + top.y * 0.5) * step;
+					const pty = centerY + top.y * rowH;
+					if (inBounds(ptx, pty)) validPoints.push({ x: ptx, y: pty });
+					if (validPoints.length >= count) break;
+					const pbx = centerX + (bottom.x + bottom.y * 0.5) * step;
+					const pby = centerY + bottom.y * rowH;
+					if (inBounds(pbx, pby)) validPoints.push({ x: pbx, y: pby });
 				}
 				ring++;
 			}
 
-			const rowH = step * 0.866025;
-			const pixelPoints = points.map(p => ({
-				x: centerX + (p.x + p.y * 0.5) * step,
-				y: centerY + p.y * rowH
-			}));
-			return filterToBounds(pixelPoints).slice(0, count);
+			return validPoints.slice(0, count);
 		}
 
 		if (layout === 'arc') {
